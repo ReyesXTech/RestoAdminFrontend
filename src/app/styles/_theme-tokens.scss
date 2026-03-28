@@ -1,0 +1,125 @@
+// ==========================================
+// THEME TOKENS - CSS Custom Properties
+// ==========================================
+
+// Light Theme (default)
+:root {
+  // App background
+  --app-bg: #{color(gray-100)};
+
+  // Surface backgrounds
+  --surface-bg: #{color(white)};
+  --surface-muted: #{color(gray-50)};
+  --surface-header: #{color(white)};
+
+  // Borders
+  --border-color: #{color(gray-200)};
+  --border-light: #{color(gray-100)};
+  --border-muted: #{color(gray-50)};
+
+  // Text colors
+  --text-primary: #{color(gray-800)};
+  --text-secondary: #{color(gray-500)};
+  --text-tertiary: #{color(gray-400)};
+  --text-disabled: #{color(gray-300)};
+
+  // Sidebar colors
+  --sidebar-bg: #{color(indigo-900)};
+  --sidebar-border: #{color(indigo-800)};
+  --sidebar-hover: #{color(indigo-700)};
+  --sidebar-active: #{color(indigo-700)};
+  --sidebar-text: #{color(white)};
+  --sidebar-text-muted: #{color(indigo-300)};
+  --sidebar-footer-bg: linear-gradient(180deg, #{color(indigo-950)} 0%, #{color(indigo-900)} 100%);
+
+  // Header colors
+  --header-bg: #{color(white)};
+  --header-border: #{color(gray-200)};
+  --header-text: #{color(gray-800)};
+
+  // Brand badge (light mode)
+  --brand-badge-bg: #{color(red-50)};
+  --brand-badge-border: #{color(red-100)};
+  --brand-badge-icon: #{color(red-600)};
+  --brand-badge-text: #{color(red-700)};
+
+  // Interactive elements
+  --interactive-hover: #{color(indigo-50)};
+  --interactive-border: #{color(indigo-200)};
+  --focus-ring: rgba(99, 102, 241, 0.2);
+
+  // Button backgrounds
+  --btn-ghost-bg: #{color(gray-50)};
+  --btn-ghost-hover: #{color(gray-100)};
+
+  // Modal overlay
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+
+  // Shadow colors
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+// Dark Theme
+[data-theme='dark'] {
+  // App background
+  --app-bg: #{color(gray-900)};
+
+  // Surface backgrounds
+  --surface-bg: #{color(gray-800)};
+  --surface-muted: #{color(gray-700)};
+  --surface-header: #{color(gray-800)};
+
+  // Borders
+  --border-color: #{color(gray-700)};
+  --border-light: #{color(gray-600)};
+  --border-muted: #{color(gray-700)};
+
+  // Text colors
+  --text-primary: #{color(gray-100)};
+  --text-secondary: #{color(gray-300)};
+  --text-tertiary: #{color(gray-400)};
+  --text-disabled: #{color(gray-500)};
+
+  // Sidebar colors (darker indigo for dark mode)
+  --sidebar-bg: #{color(indigo-950)};
+  --sidebar-border: #{color(indigo-900)};
+  --sidebar-hover: #{color(indigo-800)};
+  --sidebar-active: #{color(indigo-800)};
+  --sidebar-text: #{color(white)};
+  --sidebar-text-muted: #{color(indigo-200)};
+  --sidebar-footer-bg: linear-gradient(180deg, #{color(gray-900)} 0%, #{color(indigo-950)} 100%);
+
+  // Header colors
+  --header-bg: #{color(gray-800)};
+  --header-border: #{color(gray-700)};
+  --header-text: #{color(gray-100)};
+
+  // Brand badge (dark mode - adjusted for contrast)
+  --brand-badge-bg: #{color(gray-700)};
+  --brand-badge-border: #{color(gray-600)};
+  --brand-badge-icon: #{color(red-400)};
+  --brand-badge-text: #{color(red-300)};
+
+  // Interactive elements
+  --interactive-hover: #{color(indigo-900)};
+  --interactive-border: #{color(indigo-700)};
+  --focus-ring: rgba(99, 102, 241, 0.3);
+
+  // Button backgrounds
+  --btn-ghost-bg: #{color(gray-700)};
+  --btn-ghost-hover: #{color(gray-600)};
+
+  // Modal overlay (slightly lighter for dark mode)
+  --modal-overlay: rgba(0, 0, 0, 0.6);
+
+  // Shadow colors (softer for dark mode)
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+}

@@ -1,0 +1,335 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// Modal Overlay
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--modal-overlay);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fade-in 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--surface-bg);
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 32rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  animation: pop-in 0.2s ease-out;
+
+  &.modal-fade-in {
+    animation: slide-up-fade 0.3s ease-out;
+  }
+}
+
+// Modal Header
+.modal-header {
+  background-color: color(red-600);
+  padding: 1.5rem;
+  color: color(white);
+  position: relative;
+
+  .close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 150ms;
+
+    &:hover {
+      color: color(white);
+    }
+
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    padding-right: 40px;
+  }
+
+  .modal-address {
+    color: color(red-100);
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+      flex-shrink: 0;
+    }
+  }
+
+  .status-badge {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: color(white);
+  }
+}
+
+// Modal Body
+.modal-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// Info Section
+.info-section {
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+}
+
+// Delivery Info Card
+.delivery-info-card {
+  background-color: var(--surface-muted);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  display: flex;
+  gap: 1.5rem;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+
+    &:not(:first-child) {
+      border-left: 1px solid var(--border-color);
+      padding-left: 1.5rem;
+    }
+
+    .label {
+      font-size: 0.6875rem;
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .value {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+  }
+}
+
+// Time Info Discreet
+.time-info-discreet {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--surface-muted);
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+
+  .time-label {
+    font-weight: 500;
+  }
+
+  .time-separator {
+    color: color(gray-300);
+  }
+}
+
+// Order Items List
+.order-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+
+  .order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 0;
+    border-bottom: 1px dashed var(--border-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .item-info {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+
+      .item-quantity {
+        display: inline-block;
+        min-width: 2rem;
+        padding: 0.25rem 0.5rem;
+        background-color: color(red-100);
+        color: color(red-700);
+        font-size: 0.8125rem;
+        font-weight: 700;
+        border-radius: 0.375rem;
+        text-align: center;
+
+        &.item-quantity-cancelled {
+          background-color: color(red-200);
+          color: color(red-800);
+        }
+      }
+
+      .item-name {
+        font-size: 0.875rem;
+        color: color(gray-700);
+        font-weight: 500;
+
+        &.item-name-cancelled {
+          text-decoration: line-through;
+          opacity: 0.7;
+        }
+      }
+    }
+
+    .item-subtotal {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-primary);
+
+      &.item-subtotal-cancelled {
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+// Total Section
+.total-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, color(red-100) 0%, color(red-200) 100%);
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  &.total-section-cancelled {
+    .total-label {
+      color: color(red-900);
+    }
+
+    .total-amount {
+      color: color(red-600);
+    }
+  }
+
+  .total-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: color(red-900);
+    letter-spacing: 0.03125rem;
+    text-transform: uppercase;
+  }
+
+  .total-amount {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: color(red-600);
+  }
+}
+
+// WhatsApp Button
+.whatsapp-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, color(emerald-500) 0%, color(emerald-600) 100%);
+  color: color(white);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 150ms;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+  }
+
+  .whatsapp-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+// Animations
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -1,0 +1,158 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.order-list {
+  background: var(--surface-bg);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 12rem);
+
+  &.hidden {
+    display: none;
+  }
+
+  // Pendientes specific styles
+  &.pendientes-list {
+    .list-header {
+      background-color: color(amber-50);
+
+      .list-title {
+        color: color(amber-800);
+      }
+
+      .list-description {
+        color: color(amber-600);
+      }
+
+      .count-badge {
+        background-color: color(amber-200);
+        color: color(amber-800);
+      }
+    }
+  }
+
+  // Listos specific styles
+  &.listos-list {
+    .list-header {
+      background-color: color(emerald-50);
+
+      .list-title {
+        color: color(emerald-800);
+      }
+
+      .list-description {
+        color: color(emerald-600);
+      }
+
+      .count-badge {
+        background-color: color(emerald-200);
+        color: color(emerald-800);
+      }
+    }
+  }
+}
+
+.list-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+
+.list-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .pulse-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background-color: color(amber-500);
+    animation: pulse 2s infinite;
+  }
+
+  .list-icon {
+    width: 1rem;
+    height: 1rem;
+    color: color(emerald-500);
+  }
+
+  .list-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.list-info {
+  text-align: right;
+
+  .list-description {
+    font-size: 0.625rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+  }
+
+  .count-badge {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 900;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+  }
+}
+
+.list-content {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  @include custom-scrollbar;
+}
+
+.empty-state {
+  padding: 5rem 1.5rem;
+  text-align: center;
+
+  .empty-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.2;
+
+    .empty-icon {
+      width: 4rem;
+      height: 4rem;
+      margin-bottom: 1rem;
+      color: color(indigo-300);
+    }
+
+    .empty-text {
+      font-size: 1.125rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: color(gray-400);
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

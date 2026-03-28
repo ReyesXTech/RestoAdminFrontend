@@ -1,0 +1,552 @@
+// Import variables and mixins
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+// ==========================================
+// USUARIOS COMPONENT STYLES
+// ==========================================
+
+.usuarios-container {
+  padding: 1.25rem;
+
+  .usuarios-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .header-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        color: color(indigo-600);
+      }
+    }
+
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: color(indigo-700);
+      color: color(white);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1);
+      @include transition(all, 150ms);
+
+      &:hover {
+        background-color: color(indigo-800);
+      }
+
+      svg {
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+  }
+}
+
+.usuarios-table {
+  background: var(--surface-bg);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead {
+      border-bottom: 1px solid var(--border-light);
+      background-color: var(--surface-muted);
+
+      th {
+        padding: 1rem 1.5rem;
+        font-size: 0.625rem;
+        font-weight: 900;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        text-align: left;
+
+        &.text-right {
+          text-align: right;
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid var(--border-light);
+        @include transition(all, 150ms);
+        cursor: pointer;
+
+        &:hover {
+          background-color: var(--interactive-hover);
+          box-shadow: inset 3px 0 0 color(indigo-500);
+        }
+
+        &.user-row {
+          &:active {
+            background-color: var(--border-light);
+          }
+        }
+
+        td {
+          padding: 1rem 1.5rem;
+
+          .user-name {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+          }
+
+          .user-phone,
+          .user-email {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+          }
+
+          .role-badge {
+            font-size: 0.625rem;
+            font-weight: 900;
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            text-transform: uppercase;
+            border: 1px solid;
+
+            &.admin {
+              background-color: color(purple-100);
+              color: color(purple-700);
+              border-color: color(purple-300);
+            }
+
+            &.normal {
+              background-color: color(blue-100);
+              color: color(blue-700);
+              border-color: color(blue-300);
+            }
+          }
+
+          .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+
+            .action-btn-wrapper {
+              position: relative;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              &:hover .action-tooltip {
+                opacity: 1;
+                transform: translate(8px, -40px);
+                visibility: visible;
+              }
+            }
+
+            .action-tooltip {
+              position: fixed;
+              bottom: auto;
+              left: auto;
+              transform: translate(-20px, -30px);
+              background-color: color(gray-800);
+              color: color(white);
+              font-size: 0.75rem;
+              font-weight: 600;
+              padding: 0.5rem 0.75rem;
+              border-radius: 0.5rem;
+              white-space: nowrap;
+              opacity: 0;
+              visibility: hidden;
+              @include transition(all, 150ms);
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+              z-index: 10000;
+              pointer-events: none;
+
+              [data-theme='dark'] & {
+                background-color: color(gray-700);
+                color: color(white);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+              }
+
+              &::after {
+                content: '';
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border: 5px solid transparent;
+                border-top-color: color(gray-800);
+
+                [data-theme='dark'] & {
+                  border-top-color: color(gray-700);
+                }
+              }
+            }
+
+            .action-btn {
+              width: 2rem;
+              height: 2rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 9999px;
+              color: color(gray-400);
+              @include transition(all, 150ms);
+
+              &.edit {
+                &:hover {
+                  background-color: color(indigo-50);
+                  color: color(indigo-600);
+                }
+              }
+
+              &.delete {
+                &:hover {
+                  background-color: color(rose-50);
+                  color: color(rose-600);
+                }
+              }
+
+              svg {
+                width: 1rem;
+                height: 1rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    color: color(gray-400);
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 500;
+  }
+}
+
+// Animaciones de modal
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Modal
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fade-in 0.2s ease-out;
+
+  .modal-content {
+    &.modal-fade-in {
+      animation: slide-up-fade 0.3s ease-out;
+    }
+  }
+}
+
+.modal-content {
+  background: var(--surface-bg);
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  animation: pop-in 0.2s ease-out;
+
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    background-color: var(--surface-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h3 {
+      font-size: 1.125rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: -0.025em;
+    }
+
+    .close-btn {
+      color: var(--text-tertiary);
+      @include transition(color, 150ms);
+
+      &:hover {
+        color: var(--text-secondary);
+      }
+
+      svg {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+
+    .form-group {
+      margin-bottom: 1.25rem;
+
+      label {
+        display: block;
+        font-size: 0.625rem;
+        font-weight: 900;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.375rem;
+      }
+
+      input,
+      select {
+        width: 100%;
+        background-color: var(--surface-muted);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+          border-color: color(indigo-500);
+        }
+      }
+    }
+  }
+
+  .modal-footer {
+    padding: 1.5rem;
+    background-color: var(--surface-muted);
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+
+    button {
+      padding: 0.625rem 1.25rem;
+      border-radius: 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      @include transition(all, 150ms);
+
+      &.cancel {
+        color: color(gray-500);
+
+        &:hover {
+          color: color(gray-700);
+          background-color: color(gray-200);
+        }
+      }
+
+      &.save {
+        background-color: color(indigo-600);
+        color: color(white);
+        box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1);
+
+        &:hover {
+          background-color: color(indigo-700);
+        }
+      }
+    }
+  }
+}
+
+// Delete Confirmation Modal
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--modal-overlay);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fade-in 0.2s ease-out;
+}
+
+.delete-modal {
+  background: var(--surface-bg);
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+  padding: 2rem;
+  box-shadow: var(--shadow-xl);
+  animation: slide-up-fade 0.3s ease-out;
+  text-align: center;
+
+  .delete-modal-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, color(rose-100) 0%, color(rose-200) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 2rem;
+      height: 2rem;
+      color: color(rose-600);
+    }
+  }
+
+  .delete-modal-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.75rem 0;
+  }
+
+  .delete-modal-message {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.5;
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+  }
+
+  .delete-modal-submessage {
+    font-size: 0.8125rem;
+    color: var(--text-tertiary);
+    margin: 0 0 1.5rem 0;
+    line-height: 1.4;
+  }
+
+  .delete-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  .delete-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    @include transition(all, 150ms);
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    &.delete-modal-btn-secondary {
+      background-color: var(--surface-muted);
+      color: var(--text-secondary);
+
+      &:hover {
+        background-color: var(--border-color);
+        color: var(--text-primary);
+      }
+    }
+
+    &.delete-modal-btn-danger {
+      background: linear-gradient(135deg, color(rose-500) 0%, color(rose-600) 100%);
+      color: color(white);
+      box-shadow: 0 4px 6px -1px rgba(244, 63, 94, 0.3);
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px rgba(244, 63, 94, 0.4);
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 992px) {
+  .usuarios-container {
+    padding: 0.75rem;
+  }
+
+  .usuarios-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+
+    h1 {
+      font-size: 1.125rem;
+    }
+
+    .add-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .usuarios-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    table {
+      min-width: 600px;
+    }
+  }
+
+  .modal-content {
+    max-width: calc(100% - 2rem);
+    margin: 1rem;
+  }
+
+  .delete-modal {
+    padding: 1.5rem;
+    max-width: calc(100% - 2rem);
+  }
+}

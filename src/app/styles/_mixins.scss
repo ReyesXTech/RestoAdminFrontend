@@ -1,0 +1,240 @@
+// ==========================================
+// MIXINS REUTILIZABLES
+// ==========================================
+
+// Media queries
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "Breakpoint '#{$breakpoint}' no existe";
+  }
+}
+
+// Flexbox utilities
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+// Text truncation
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Shadow helper
+@mixin shadow($size: default) {
+  @if $size == sm {
+    box-shadow: $shadow-sm;
+  } @else if $size == md {
+    box-shadow: $shadow-md;
+  } @else if $size == lg {
+    box-shadow: $shadow-lg;
+  } @else if $size == xl {
+    box-shadow: $shadow-xl;
+  } @else if $size == '2xl' {
+    box-shadow: $shadow-2xl;
+  } @else {
+    box-shadow: $shadow-default;
+  }
+}
+
+// Border radius helper
+@mixin rounded($size: DEFAULT) {
+  border-radius: map-get($radius, $size);
+}
+
+// Transition helper
+@mixin transition($property: all, $duration: 150ms, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+// Hover state with transition
+@mixin hover-effect($color-from, $color-to, $property: background-color) {
+  @include transition($property, 150ms);
+  &:hover {
+    #{$property}: $color-to;
+  }
+}
+
+// Button base styles
+@mixin btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: map-get($radius, xl);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border: none;
+  @include transition(all, 150ms);
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Card base styles
+@mixin card-base {
+  background: color(white);
+  border-radius: map-get($radius, xl);
+  box-shadow: map-get($shadows, sm);
+  border: 1px solid color(gray-200);
+  @include transition(all, 150ms);
+  
+  &:hover {
+    box-shadow: map-get($shadows, md);
+  }
+}
+
+// Input base styles
+@mixin input-base {
+  width: 100%;
+  background: color(gray-50);
+  border: 1px solid color(gray-200);
+  border-radius: map-get($radius, xl);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    border-color: color(indigo-500);
+  }
+}
+
+// Badge styles
+@mixin badge-base {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-radius: map-get($radius, full);
+}
+
+// Animation keyframes
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Animation utilities
+@mixin animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@mixin animate-pop-in {
+  animation: pop-in 0.2s ease-out;
+}
+
+@mixin animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// Scrollbar custom
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: color(gray-100);
+    border-radius: map-get($radius, full);
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: color(gray-300);
+    border-radius: map-get($radius, full);
+    
+    &:hover {
+      background: color(gray-400);
+    }
+  }
+}
+
+// Grid utilities
+@mixin grid($columns: 1, $gap: 1rem) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: $gap;
+}
+
+// Position utilities
+@mixin absolute-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+// Visually hidden (for screen readers)
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

@@ -1,0 +1,159 @@
+<div class="pedidos-container">
+  <!-- Header -->
+  <div class="pedidos-header">
+    <h1>
+      <svg class="header-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"
+        />
+      </svg>
+      Pedidos
+    </h1>
+
+    <!-- View Mode Selector (Mobile Only) -->
+    <div class="view-mode-selector mobile-only">
+      <button
+        class="view-mode-btn"
+        [class.active]="viewMode() === 'pendientes'"
+        (click)="setViewMode('pendientes')"
+        title="Ver solo pendientes"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span class="btn-text">Pendientes</span>
+        <span class="count-badge">{{ pendientes().length }}</span>
+      </button>
+      <button
+        class="view-mode-btn"
+        [class.active]="viewMode() === 'both'"
+        (click)="setViewMode('both')"
+        title="Ver ambos"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="12" y1="3" x2="12" y2="21"></line>
+        </svg>
+        <span class="btn-text">Ambos</span>
+      </button>
+      <button
+        class="view-mode-btn"
+        [class.active]="viewMode() === 'listos'"
+        (click)="setViewMode('listos')"
+        title="Ver solo listos"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span class="btn-text">Listos</span>
+        <span class="count-badge">{{ listos().length }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="lists-grid">
+    <!-- List: Pendientes -->
+    <app-order-list
+      type="pendientes"
+      [orders]="pendientes()"
+      [previewEnabled]="previewEnabled()"
+      [currentTime]="currentTime()"
+      [hidden]="viewMode() === 'listos'"
+      (viewOrder)="viewOrder($event)"
+      (markReady)="onMarkReady($event)"
+      (cancelOrder)="onCancelOrder($event)"
+    />
+
+    <!-- List: Listos -->
+    <app-order-list
+      type="listos"
+      [orders]="listos()"
+      [previewEnabled]="previewEnabled()"
+      [currentTime]="currentTime()"
+      [hidden]="viewMode() === 'pendientes'"
+      (viewOrder)="viewOrder($event)"
+      (markReady)="onMarkReady($event)"
+      (cancelOrder)="onCancelOrder($event)"
+      (restoreToPending)="onRestoreToPending($event)"
+    />
+  </div>
+
+  <!-- Toast Notifications -->
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div
+      class="toast-notification"
+      [class.toast-success]="toast.type === 'success'"
+      [class.toast-error]="toast.type === 'error'"
+    >
+      <svg
+        class="toast-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        @if (toast.type === 'success') {
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        } @else {
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        }
+      </svg>
+      <span class="toast-message">{{ toast.message }}</span>
+      <button (click)="toastService.dismiss(toast.id)" class="toast-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  }
+
+  <!-- Detail Modal -->
+  @if (selectedOrder()) {
+    <app-pending-ready-order-detail-modal
+      [order]="selectedOrder()"
+      [isUrgent]="selectedOrder()!.desiredDeliveryTime | isUrgent: currentTime()"
+      (close)="closeDetail()"
+    />
+  }
+
+  <!-- Cancel Confirmation Modal -->
+  @if (showCancelModal() && orderToCancel()) {
+    <div class="cancel-modal-overlay" (click)="closeCancelModal()">
+      <div class="cancel-modal" (click)="$event.stopPropagation()">
+        <div class="cancel-modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3 class="cancel-modal-title">¿Cancelar Pedido?</h3>
+        <p class="cancel-modal-message">
+          Estás a punto de cancelar el pedido de <strong>{{ orderToCancel()!.clientName }}</strong>
+        </p>
+        <p class="cancel-modal-submessage">
+          Esta acción no se puede deshacer. El pedido se moverá a la sección de cancelados.
+        </p>
+        <div class="cancel-modal-actions">
+          <button class="cancel-modal-btn cancel-modal-btn-secondary" (click)="closeCancelModal()">
+            Volver
+          </button>
+          <button class="cancel-modal-btn cancel-modal-btn-danger" (click)="confirmCancel()">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+            Sí, Cancelar Pedido
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

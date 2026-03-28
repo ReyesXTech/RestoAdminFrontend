@@ -1,0 +1,186 @@
+<div class="usuarios-container">
+  <!-- Header -->
+  <div class="usuarios-header">
+    <h1>
+      <svg class="header-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+        />
+      </svg>
+      Gestión de Usuarios
+    </h1>
+    @if (currentUser()?.role === 'admin') {
+      <button (click)="openAddModal()" class="add-btn">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+        NUEVO USUARIO
+      </button>
+    }
+  </div>
+
+  <!-- Table -->
+  <div class="usuarios-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th class="w-40">Rol</th>
+          @if (currentUser()?.role === 'admin') {
+            <th class="text-right w-32">Acciones</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr (click)="openEditModal(user)" class="user-row">
+            <td>
+              <div class="user-name">{{ user.name }}</div>
+            </td>
+            <td class="user-phone">{{ user.phone }}</td>
+            <td class="user-email">{{ user.email || 'N/A' }}</td>
+            <td>
+              <span
+                class="role-badge"
+                [class.admin]="user.role === 'admin'"
+                [class.normal]="user.role === 'normal'"
+              >
+                {{ user.role === 'normal' ? 'Operario' : 'Admin' }}
+              </span>
+            </td>
+            @if (currentUser()?.role === 'admin') {
+              <td>
+                <div class="actions" (click)="$event.stopPropagation()">
+                  <div class="action-btn-wrapper">
+                    <button
+                      (click)="$event.stopPropagation(); openEditModal(user)"
+                      class="action-btn edit"
+                    >
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                        />
+                      </svg>
+                    </button>
+                    <span class="action-tooltip">Editar</span>
+                  </div>
+                  <div class="action-btn-wrapper">
+                    <button (click)="deleteUser(user)" class="action-btn delete">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                        />
+                      </svg>
+                    </button>
+                    <span class="action-tooltip">Eliminar</span>
+                  </div>
+                </div>
+              </td>
+            }
+          </tr>
+        }
+
+        @if (users().length === 0) {
+          <tr>
+            <td colspan="4" class="empty-state">No hay usuarios registrados.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+@if (showModal) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content modal-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalMode === 'add' ? 'Nuevo Usuario' : 'Editar Usuario' }}</h3>
+        <button (click)="closeModal()" class="close-btn">
+          <svg
+            class="w-6 h-6"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input [(ngModel)]="formName" name="name" type="text" placeholder="Ej: Juan Pérez" />
+        </div>
+        <div class="form-group">
+          <label>Número de Teléfono</label>
+          <input [(ngModel)]="formPhone" name="phone" type="text" placeholder="Ej: +53 55555555" />
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input
+            [(ngModel)]="formEmail"
+            name="email"
+            type="email"
+            placeholder="Ej: usuario@resto.com"
+          />
+        </div>
+        <div class="form-group">
+          <label>Rol de Usuario</label>
+          <select [(ngModel)]="formRole" name="role">
+            @for (role of roles; track role) {
+              <option [value]="role">{{ role | uppercase }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="cancel">Cancelar</button>
+        <button (click)="saveUser()" class="save">
+          {{ modalMode === 'add' ? 'Crear' : 'Actualizar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal() && userToDelete()) {
+  <div class="delete-modal-overlay" (click)="closeDeleteModal()">
+    <div class="delete-modal" (click)="$event.stopPropagation()">
+      <div class="delete-modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          ></path>
+        </svg>
+      </div>
+      <h3 class="delete-modal-title">¿Eliminar Usuario?</h3>
+      <p class="delete-modal-message">
+        Estás a punto de eliminar <strong>{{ userToDelete()!.name }}</strong>
+      </p>
+      <p class="delete-modal-submessage">
+        Esta acción no se puede deshacer. El usuario será eliminado permanentemente.
+      </p>
+      <div class="delete-modal-actions">
+        <button class="delete-modal-btn delete-modal-btn-secondary" (click)="closeDeleteModal()">
+          Volver
+        </button>
+        <button class="delete-modal-btn delete-modal-btn-danger" (click)="confirmDelete()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+            />
+          </svg>
+          Sí, Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+}

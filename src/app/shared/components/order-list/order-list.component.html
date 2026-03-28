@@ -1,0 +1,58 @@
+<div
+  class="order-list"
+  [class.pendientes-list]="type() === 'pendientes'"
+  [class.listos-list]="type() === 'listos'"
+  [class.hidden]="hidden()"
+>
+  <div class="list-header">
+    <div class="list-title-wrapper">
+      @if (type() === 'pendientes') {
+        <span class="pulse-dot"></span>
+      } @else {
+        <svg class="list-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        </svg>
+      }
+      <h2 class="list-title">{{ listTitle }}</h2>
+    </div>
+    <div class="list-info">
+      <p class="list-description">{{ listDescription }}</p>
+      <span class="count-badge">{{ orders().length }}</span>
+    </div>
+  </div>
+
+  <div class="list-content">
+    @for (order of orders(); track order.id) {
+      <app-order-card
+        [order]="order"
+        [orderType]="type()"
+        [previewEnabled]="previewEnabled()"
+        [currentTime]="currentTime()"
+        (viewOrder)="viewOrder.emit($event)"
+        (markReady)="markReady.emit($event)"
+        (cancelOrder)="cancelOrder.emit($event)"
+        (restoreToPending)="restoreToPending.emit($event)"
+      />
+    }
+
+    @if (orders().length === 0) {
+      <div class="empty-state">
+        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          ></path>
+        </svg>
+        <p class="empty-text">
+          @if (type() === 'pendientes') {
+            No hay pedidos pendientes
+          } @else {
+            No hay pedidos listos
+          }
+        </p>
+      </div>
+    }
+  </div>
+</div>

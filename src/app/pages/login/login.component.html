@@ -1,0 +1,62 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <div class="login-header">
+      <div class="logo-wrapper">
+        <img
+          src="/LogoBlancoFondoTransparenteSinNombre.png"
+          alt="RestoAdmin Logo"
+          class="logo-icon"
+        />
+      </div>
+      <h2>RestoAdmin</h2>
+      <p>Panel de Control de Pedidos</p>
+    </div>
+
+    <div class="login-card">
+      <form class="login-form" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            [(ngModel)]="email"
+            required
+            placeholder="admin@resto.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            [(ngModel)]="password"
+            required
+            placeholder="••••••••"
+          />
+        </div>
+
+        @if (error()) {
+          <div class="error-message">
+            <svg class="error-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <p class="error-text">Credenciales incorrectas</p>
+          </div>
+        }
+
+        <button type="submit" class="submit-btn">Acceder al Panel</button>
+      </form>
+
+      <div class="login-footer">
+        <p class="footer-text">Acceso Administrador Autorizado</p>
+      </div>
+    </div>
+  </div>
+</div>

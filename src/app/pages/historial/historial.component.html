@@ -1,0 +1,225 @@
+<div class="historial-container">
+  <div class="historial-header">
+    <h1>
+      <svg class="header-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"
+        />
+      </svg>
+      Historial de Pedidos
+    </h1>
+  </div>
+
+  <div class="search-section">
+    <div class="search-inputs">
+      <div class="input-wrapper">
+        <svg
+          class="input-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Buscar por nombre..."
+          class="search-input"
+        />
+      </div>
+      <div class="select-wrapper">
+        <select [(ngModel)]="searchStatus" class="status-select">
+          <option value="all">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="listo">Listo</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+    </div>
+    <div class="date-filters">
+      <div class="date-range">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Desde:
+        </label>
+        <input type="date" [(ngModel)]="searchStartDate" class="date-input" />
+      </div>
+      <div class="date-range">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Hasta:
+        </label>
+        <input type="date" [(ngModel)]="searchEndDate" class="date-input" />
+      </div>
+      <button (click)="clearFilters()" class="clear-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <div class="historial-content">
+    @for (group of groupedOrders(); track group.date) {
+      <div class="date-group">
+        <div class="date-header">
+          <svg class="date-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"
+            />
+          </svg>
+          {{ group.date }}
+          <span class="order-count">{{ group.orders.length }} pedidos</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Dirección</th>
+              <th>Teléfono</th>
+              <th>Hora</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of group.orders; track order.id) {
+              <tr
+                (click)="viewOrder(order)"
+                [class.cancelled]="order.status === 'cancelado'"
+                [class.ready]="order.status === 'listo'"
+                [class.pending]="order.status === 'pendiente'"
+              >
+                <td>
+                  <div class="client-name">{{ order.clientName }}</div>
+                  @if (order.status === 'cancelado') {
+                    <div class="status-badge cancelled">CANCELADO</div>
+                  } @else if (order.status === 'listo') {
+                    <div class="status-badge ready">LISTO</div>
+                  } @else if (order.status === 'pendiente') {
+                    <div class="status-badge pending">PENDIENTE</div>
+                  }
+                </td>
+                <td>{{ order.address }}</td>
+                <td>
+                  @if (order.phone) {
+                    <span
+                      class="phone-number"
+                      [class.phone-cancelled]="order.status === 'cancelado'"
+                      [class.phone-ready]="order.status === 'listo'"
+                      [class.phone-pending]="order.status === 'pendiente'"
+                      (click)="$event.stopPropagation(); copyPhone(order.phone)"
+                      title="Click para copiar"
+                    >
+                      {{ order.phone }}
+                      <svg
+                        class="copy-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </span>
+                  } @else {
+                    <span class="no-phone">N/A</span>
+                  }
+                </td>
+                <td>{{ order.orderTime | date: 'shortTime' }}</td>
+                <td
+                  class="total"
+                  [class.total-cancelled]="order.status === 'cancelado'"
+                  [class.total-ready]="order.status === 'listo'"
+                  [class.total-pending]="order.status === 'pendiente'"
+                >
+                  {{ order.total | currency }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (groupedOrders().length === 0) {
+      <div class="empty-state">
+        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          ></path>
+        </svg>
+        <p class="empty-text">No se encontraron pedidos en el historial.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Toast Notifications -->
+  @for (toast of toasts(); track toast.id) {
+    <div
+      class="toast-notification"
+      [class.toast-success]="toast.type === 'success'"
+      [class.toast-error]="toast.type === 'error'"
+    >
+      <svg
+        class="toast-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        @if (toast.type === 'success') {
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        } @else {
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        }
+      </svg>
+      <span class="toast-message">{{ toast.message }}</span>
+      <button (click)="toastService.dismiss(toast.id)" class="toast-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  }
+
+  <!-- Detail Modal for Cancelled Orders -->
+  @if (selectedOrder() && isOrderCancelled(selectedOrder()!)) {
+    <app-cancelled-order-detail-modal
+      [order]="selectedOrder()"
+      [showStrikethrough]="true"
+      (close)="closeDetail()"
+    />
+  }
+
+  <!-- Detail Modal for Pending/Ready Orders -->
+  @if (selectedOrder() && !isOrderCancelled(selectedOrder()!)) {
+    <app-pending-ready-order-detail-modal
+      [order]="selectedOrder()"
+      [isUrgent]="false"
+      (close)="closeDetail()"
+    />
+  }
+</div>

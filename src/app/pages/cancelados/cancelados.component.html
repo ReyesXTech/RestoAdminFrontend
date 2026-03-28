@@ -1,0 +1,136 @@
+<div class="cancelados-container">
+  <div class="cancelados-header">
+    <h1>
+      <svg class="header-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+        />
+      </svg>
+      Pedidos Cancelados
+    </h1>
+  </div>
+
+  <div class="cancelados-content">
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente / Dirección</th>
+          <th>Teléfono</th>
+          <th>Fecha y Hora</th>
+          <th>Entrega Deseada</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (order of cancelledOrders(); track order.id) {
+          <tr (click)="viewOrder(order)">
+            <td>
+              <div class="client-name">{{ order.clientName }}</div>
+              <div class="address">{{ order.address }}</div>
+            </td>
+            <td>
+              @if (order.phone) {
+                <span
+                  class="phone-copy"
+                  (click)="$event.stopPropagation(); copyPhone(order.phone)"
+                  title="Click para copiar"
+                >
+                  <svg
+                    class="phone-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                    />
+                  </svg>
+                  {{ order.phone }}
+                  <svg
+                    class="copy-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </span>
+              } @else {
+                <span class="no-phone">N/A</span>
+              }
+            </td>
+            <td>
+              <div class="datetime">{{ order.orderTime | date: 'medium' }}</div>
+            </td>
+            <td>
+              <span class="delivery-badge">{{ order.desiredDeliveryTime }}</span>
+            </td>
+            <td class="total">{{ order.total | currency }}</td>
+          </tr>
+        }
+        @if (cancelledOrders().length === 0) {
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <div class="empty-wrapper">
+                  <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                  <p class="empty-text">No hay pedidos cancelados</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Toast Notifications -->
+  @for (toast of toasts(); track toast.id) {
+    <div
+      class="toast-notification"
+      [class.toast-success]="toast.type === 'success'"
+      [class.toast-error]="toast.type === 'error'"
+    >
+      <svg
+        class="toast-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        @if (toast.type === 'success') {
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        } @else {
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        }
+      </svg>
+      <span class="toast-message">{{ toast.message }}</span>
+      <button (click)="toastService.dismiss(toast.id)" class="toast-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  }
+
+  <!-- Detail Modal -->
+  <app-cancelled-order-detail-modal
+    [order]="selectedOrder()"
+    [showStrikethrough]="true"
+    (close)="closeDetail()"
+  />
+</div>

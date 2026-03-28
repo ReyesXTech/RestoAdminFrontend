@@ -1,0 +1,376 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.order-card {
+  background: var(--surface-bg);
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  @include transition(all, 150ms);
+
+  // Persistent border colors based on order type
+  &.order-pendientes {
+    border-color: color(amber-400);
+  }
+
+  &.order-listos {
+    border-color: color(emerald-400);
+  }
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  &.urgent {
+    border-color: color(red-200);
+  }
+}
+
+// Quick Preview Panel - Hidden by default
+.quick-preview {
+  display: none;
+  background-color: var(--surface-muted);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-light);
+
+  // Animation for smooth appearance
+  opacity: 0;
+  transform: translateY(-5px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.625rem;
+
+    .preview-title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .preview-icon {
+      width: 0.875rem;
+      height: 0.875rem;
+      color: var(--text-secondary);
+    }
+  }
+
+  .preview-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+    max-height: 150px;
+    overflow-y: auto;
+    @include custom-scrollbar;
+
+    .preview-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+
+      .preview-item-qty {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.75rem;
+        padding: 0.125rem 0.375rem;
+        background-color: color(indigo-50);
+        color: color(indigo-700);
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 0.25rem;
+      }
+
+      .preview-item-name {
+        color: var(--text-secondary);
+        font-weight: 500;
+        @include line-clamp(1);
+      }
+    }
+  }
+
+  .preview-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-light);
+
+    .preview-total-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .preview-total-amount {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+  }
+}
+
+// Show quick preview on hover ONLY when preview-enabled class is present
+.order-card.preview-enabled:hover .quick-preview {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+// Order Header
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+
+  .order-info {
+    .order-client-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .order-client {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        @include transition(color, 150ms);
+      }
+
+      .urgent-badge {
+        background-color: color(red-500);
+        color: color(white);
+        font-size: 0.625rem;
+        font-weight: 700;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        @include animate-pulse;
+      }
+    }
+
+    .order-address {
+      font-size: 0.75rem;
+      color: color(gray-400);
+      @include line-clamp(1);
+      margin-bottom: 0.5rem;
+    }
+
+    .order-phone {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.375rem 0.625rem;
+      border-radius: 0.5rem;
+      background-color: var(--surface-muted);
+      color: var(--text-primary);
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      letter-spacing: 0.02em;
+      @include transition(all, 150ms);
+
+      &:hover {
+        background-color: var(--border-color);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .phone-icon {
+        width: 0.875rem;
+        height: 0.875rem;
+      }
+
+      .copy-icon {
+        width: 0.875rem;
+        height: 0.875rem;
+        opacity: 0.7;
+      }
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+
+    .action-btn-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover .action-tooltip {
+        opacity: 1;
+        transform: translate(8px, -40px);
+        visibility: visible;
+      }
+    }
+
+    .action-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      @include transition(all, 150ms);
+      cursor: pointer;
+
+      &.mark-ready {
+        background-color: color(emerald-500);
+        color: color(white);
+
+        &:hover {
+          background-color: color(emerald-600);
+        }
+      }
+
+      &.restore {
+        background-color: color(amber-500);
+        color: color(white);
+
+        &:hover {
+          background-color: color(amber-600);
+        }
+      }
+
+      &.cancel {
+        background-color: color(red-500);
+        color: color(white);
+
+        &:hover {
+          background-color: color(red-600);
+        }
+      }
+
+      .action-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+
+    .action-tooltip {
+      position: fixed;
+      bottom: auto;
+      left: auto;
+      transform: translate(-20px, -30px);
+      background-color: color(gray-800);
+      color: color(white);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      @include transition(all, 150ms);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      pointer-events: none;
+
+      [data-theme='dark'] & {
+        background-color: color(gray-700);
+        color: color(white);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: color(gray-800);
+
+        [data-theme='dark'] & {
+          border-top-color: color(gray-700);
+        }
+      }
+    }
+  }
+}
+
+// Hover effects for order cards based on type
+// Border color intensifies on hover (always)
+.order-card.order-pendientes:hover {
+  border-color: color(amber-500);
+}
+
+.order-card.order-listos:hover {
+  border-color: color(emerald-500);
+}
+
+// Quick preview styling on hover (only when preview is enabled)
+.order-card.order-pendientes.preview-enabled:hover .quick-preview {
+  border-color: color(amber-300);
+
+  .preview-items {
+    .preview-item {
+      .preview-item-qty {
+        background-color: color(amber-50);
+        color: color(amber-700);
+      }
+    }
+  }
+}
+
+.order-card.order-listos.preview-enabled:hover .quick-preview {
+  border-color: color(emerald-300);
+
+  .preview-items {
+    .preview-item {
+      .preview-item-qty {
+        background-color: color(emerald-50);
+        color: color(emerald-700);
+      }
+    }
+  }
+}
+
+// Order Footer
+.order-footer {
+  .delivery-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 0.875rem;
+    background-color: var(--surface-muted);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-light);
+
+    .label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .value {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+
+      &.urgent {
+        color: color(red-500);
+        font-weight: 700;
+      }
+    }
+  }
+}

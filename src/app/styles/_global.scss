@@ -1,0 +1,640 @@
+// ==========================================
+// ESTILOS GLOBALES
+// ==========================================
+
+// Reset básico
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+// HTML y Body
+html,
+body {
+  height: 100%;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--app-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+// Enlaces
+a {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Imágenes
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// Botones
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+// Inputs
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Tablas
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 1rem;
+}
+
+// Utilidades de texto
+.text-truncate {
+  @include text-truncate;
+}
+
+.line-clamp-1 {
+  @include line-clamp(1);
+}
+
+// Utilidades de scroll
+.custom-scrollbar {
+  @include custom-scrollbar;
+}
+
+// Animaciones
+.animate-pulse {
+  @include animate-pulse;
+}
+
+.animate-pop-in {
+  @include animate-pop-in;
+}
+
+.animate-spin {
+  @include animate-spin;
+}
+
+// Utilidades de diseño
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.gap-6 {
+  gap: 1.5rem;
+}
+
+// Grid
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// Overflow
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+// Height
+.h-full {
+  height: 100%;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+// Width
+.w-full {
+  width: 100%;
+}
+
+// Padding
+.p-4 {
+  padding: 1rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+// Margin
+.m-0 {
+  margin: 0;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-5 {
+  margin-bottom: 1.25rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+// Border
+.border {
+  border-width: 1px;
+  border-style: solid;
+}
+
+.border-t {
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.border-b {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.border-l {
+  border-left-width: 1px;
+  border-left-style: solid;
+}
+
+// Rounded
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.rounded-2xl {
+  border-radius: 1rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+// Shadow
+.shadow-sm {
+  box-shadow: $shadow-sm;
+}
+
+.shadow {
+  box-shadow: $shadow-default;
+}
+
+.shadow-md {
+  box-shadow: $shadow-md;
+}
+
+.shadow-lg {
+  box-shadow: $shadow-lg;
+}
+
+.shadow-2xl {
+  box-shadow: $shadow-2xl;
+}
+
+// Position
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+// Z-index
+.z-10 {
+  z-index: 10;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+// Display
+.block {
+  display: block;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+.hidden {
+  display: none;
+}
+
+// Text alignment
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+// Font weights
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-black {
+  font-weight: 900;
+}
+
+// Font sizes
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+// Line height
+.leading-none {
+  line-height: 1;
+}
+
+.leading-tight {
+  line-height: 1.25;
+}
+
+// Letter spacing
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+
+.tracking-tighter {
+  letter-spacing: -0.05em;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em;
+}
+
+// Text transform
+.uppercase {
+  text-transform: uppercase;
+}
+
+// Opacity
+.opacity-0 {
+  opacity: 0;
+}
+
+.opacity-20 {
+  opacity: 0.2;
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.opacity-80 {
+  opacity: 0.8;
+}
+
+// Cursor
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Pointer events
+.pointer-events-none {
+  pointer-events: none;
+}
+
+// Resize
+.resize-none {
+  resize: none;
+}
+
+// Appearance
+.appearance-none {
+  appearance: none;
+}
+
+// Sticky
+.sticky {
+  position: sticky;
+}
+
+.top-0 {
+  top: 0;
+}
+
+// Transition
+.transition {
+  @include transition(all, 150ms);
+}
+
+.transition-all {
+  @include transition(all, 150ms);
+}
+
+.transition-colors {
+  @include transition(background-color 150ms);
+}
+
+// Transform
+.scale-95 {
+  transform: scale(0.95);
+}
+
+// Screen reader only
+.sr-only {
+  @include visually-hidden;
+}
+
+// ==========================================
+// TOAST NOTIFICATIONS (Global)
+// ==========================================
+.toast-notification {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slide-in-right 0.3s ease-out;
+
+  &.toast-success {
+    background-color: color(emerald-600);
+    color: color(white);
+  }
+
+  &.toast-error {
+    background-color: color(red-600);
+    color: color(white);
+  }
+
+  .toast-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .toast-message {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .toast-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    @include transition(opacity, 150ms);
+
+    &:hover {
+      opacity: 1;
+    }
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// ==========================================
+// MODAL ANIMATIONS (Global)
+// ==========================================
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// ==========================================
+// ACTION TOOLTIPS (Global)
+// ==========================================
+.action-tooltip {
+  position: fixed;
+  bottom: auto;
+  left: auto;
+  transform: translate(-20px, -30px);
+  background-color: color(gray-800);
+  color: color(white);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  @include transition(all, 150ms);
+  z-index: 100;
+  pointer-events: none;
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -0.25rem;
+    border-width: 0.25rem;
+    border-style: solid;
+    border-color: color(gray-800) transparent transparent transparent;
+  }
+
+  .action-btn-wrapper:hover & {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -30px);
+  }
+}

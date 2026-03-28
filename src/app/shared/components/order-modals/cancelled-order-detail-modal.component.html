@@ -1,0 +1,78 @@
+@if (order()) {
+  <div class="modal-overlay" (click)="onClose()">
+    <div class="modal-content modal-fade-in" (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="modal-header cancelled">
+        <button (click)="onClose()" class="close-btn">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <h2 class="modal-title">{{ order()!.clientName }}</h2>
+        <p class="modal-address">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          {{ order()!.address }}
+        </p>
+        <span class="status-badge cancelled">CANCELADO</span>
+      </div>
+
+      <div class="modal-body">
+        <!-- Main Info -->
+        <div class="info-section">
+          <h3 class="section-title">Información de Entrega</h3>
+          <div class="delivery-info-card">
+            <div class="info-item">
+              <span class="label">Entrega Deseada</span>
+              <span class="value">{{ order()!.desiredDeliveryTime }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Teléfono</span>
+              <span class="value">{{ order()!.phone || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Info (Discreet) -->
+        <div class="time-info-discreet">
+          <span class="time-label">Pedido: {{ formatTime(order()!.orderTime) }}</span>
+          <span class="time-separator">•</span>
+          <span class="time-label">Fecha: {{ order()!.orderTime | date:'shortDate' }}</span>
+        </div>
+
+        <!-- Order Items -->
+        <div class="info-section">
+          <h3 class="section-title">Resumen del Pedido</h3>
+          <div class="order-items-list">
+            @for (item of order()!.items; track item.name) {
+              <div class="order-item-row">
+                <div class="item-info">
+                  <span class="item-quantity item-quantity-cancelled">{{ item.quantity }}x</span>
+                  <span class="item-name" [class.item-name-cancelled]="showStrikethrough()">{{ item.name }}</span>
+                </div>
+                <span class="item-subtotal" [class.item-subtotal-cancelled]="showStrikethrough()">{{ (item.price * item.quantity) | currency }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="total-section total-section-cancelled">
+          <span class="total-label">TOTAL</span>
+          <span class="total-amount">{{ order()!.total | currency }}</span>
+        </div>
+
+        <!-- Actions -->
+        <a [href]="getWhatsAppLink(order()!)" target="_blank" class="whatsapp-button">
+          <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.672 1.433 5.66 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          <span>Contactar por WhatsApp</span>
+        </a>
+      </div>
+    </div>
+  </div>
+}
