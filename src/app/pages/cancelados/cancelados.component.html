@@ -26,7 +26,7 @@
           <tr (click)="viewOrder(order)">
             <td>
               <div class="client-name">{{ order.clientName }}</div>
-              <div class="address">{{ order.address }}</div>
+              <div class="address">{{ order.deliveryAddress }}</div>
             </td>
             <td>
               @if (order.phone) {
@@ -63,10 +63,10 @@
               }
             </td>
             <td>
-              <div class="datetime">{{ order.orderTime | date: 'medium' }}</div>
+              <div class="datetime">{{ order.orderTimeUtc | date: 'medium' }}</div>
             </td>
             <td>
-              <span class="delivery-badge">{{ order.desiredDeliveryTime }}</span>
+              <span class="delivery-badge">{{ order.desiredDeliveryTimeUtc }}</span>
             </td>
             <td class="total">{{ order.total | currency }}</td>
           </tr>

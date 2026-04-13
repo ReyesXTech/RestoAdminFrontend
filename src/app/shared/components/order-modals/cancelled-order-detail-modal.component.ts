@@ -20,7 +20,7 @@ export class CancelledOrderDetailModalComponent {
   getWhatsAppLink(order: Order): string {
     const phone = order.phone || '';
     const message = encodeURIComponent(
-      `Hola ${order.clientName}, vimos que tu pedido fue cancelado. ¿Podemos ayudarte con algo más?`
+      `Hola ${order.clientName}, vimos que tu pedido fue cancelado. ¿Podemos ayudarte con algo más?`,
     );
     return `https://wa.me/${phone}?text=${message}`;
   }

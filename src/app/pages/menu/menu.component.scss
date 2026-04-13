@@ -387,8 +387,7 @@
 
   table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
 
     thead {
       border-bottom: 1px solid var(--border-light);
@@ -401,17 +400,9 @@
         color: var(--text-secondary);
         text-align: left;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-
-        &:first-child {
-          border-top-left-radius: 0.75rem;
-        }
+        letter-spacing: 0.1em;
 
         &:last-child {
-          border-top-right-radius: 0.75rem;
-        }
-
-        &.text-right {
           text-align: right;
         }
       }
@@ -423,10 +414,6 @@
         position: relative;
         @include transition(all, 150ms);
         cursor: pointer;
-
-        &:last-child {
-          border-bottom: none;
-        }
 
         &:hover {
           background-color: var(--interactive-hover);
@@ -556,45 +543,6 @@
               }
             }
 
-            .action-tooltip {
-              position: fixed;
-              bottom: auto;
-              left: auto;
-              transform: translate(-20px, -30px);
-              background-color: color(gray-800);
-              color: color(white);
-              font-size: 0.75rem;
-              font-weight: 600;
-              padding: 0.5rem 0.75rem;
-              border-radius: 0.5rem;
-              white-space: nowrap;
-              opacity: 0;
-              visibility: hidden;
-              @include transition(all, 150ms);
-              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-              z-index: 1000;
-
-              [data-theme='dark'] & {
-                background-color: color(gray-700);
-                color: color(white);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-              }
-
-              &::after {
-                content: '';
-                position: absolute;
-                top: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-                border: 5px solid transparent;
-                border-top-color: color(gray-800);
-
-                [data-theme='dark'] & {
-                  border-top-color: color(gray-700);
-                }
-              }
-            }
-
             .action-btn {
               width: 2rem;
               height: 2rem;
@@ -644,6 +592,54 @@
 
     font-size: 0.875rem;
     font-weight: 500;
+  }
+}
+
+// ==========================================
+// ACTION TOOLTIP FIXED (para botones de tabla)
+// ==========================================
+.action-tooltip-fixed {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background-color: #1f2937; // gray-800
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1f2937;
+  }
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// Modo oscuro
+:host-context([data-theme='dark']) {
+  .action-tooltip-fixed {
+    background-color: #374151; // gray-700
+    &::after {
+      border-top-color: #374151;
+    }
   }
 }
 

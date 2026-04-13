@@ -46,7 +46,6 @@ table {
   border-collapse: collapse;
 
   thead {
-    background-color: color(red-50);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -60,10 +59,6 @@ table {
       letter-spacing: 0.1em;
       text-align: left;
       border-bottom: 1px solid color(red-100);
-
-      &:last-child {
-        text-align: right;
-      }
     }
   }
 
@@ -74,19 +69,10 @@ table {
       @include transition(all, 150ms);
 
       &:hover {
-        background-color: color(red-100);
         box-shadow: inset 3px 0 0 color(red-500);
 
         .client-name {
           color: color(red-900);
-        }
-
-        :host-context([data-theme='dark']) & {
-          background-color: color(red-900);
-
-          .client-name {
-            color: color(red-50);
-          }
         }
       }
 

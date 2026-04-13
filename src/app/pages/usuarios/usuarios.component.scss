@@ -55,6 +55,9 @@
   }
 }
 
+// ==========================================
+// USUARIOS TABLE STYLES
+// ==========================================
 .usuarios-table {
   background: var(--surface-bg);
   border-radius: 1.5rem;
@@ -79,7 +82,7 @@
         letter-spacing: 0.1em;
         text-align: left;
 
-        &.text-right {
+        &:last-child {
           text-align: right;
         }
       }
@@ -88,6 +91,7 @@
     tbody {
       tr {
         border-bottom: 1px solid var(--border-light);
+        position: relative;
         @include transition(all, 150ms);
         cursor: pointer;
 
@@ -132,7 +136,7 @@
               border-color: color(purple-300);
             }
 
-            &.normal {
+            &.operario {
               background-color: color(blue-100);
               color: color(blue-700);
               border-color: color(blue-300);

@@ -1,251 +1,199 @@
 // ==========================================
 // MODELS / INTERFACES
-// ==========================================
-// Estas interfaces están diseñadas para coincidir con las entidades del backend .NET
-// Cuando se migre a la API real, los tipos deberían ser compatibles sin cambios
-
-// ==========================================
-// ENUMS
+// Alineadas con el backend .NET (RestoAdmin)
 // ==========================================
 
-/**
- * Estados posibles de un pedido
- * Los valores coinciden con los que usará el backend
- */
+// ==========================================
+// ENUMS (coinciden con backend)
+// ==========================================
+
 export enum OrderStatus {
-  Pendiente = 'pendiente',
-  Listo = 'listo',
-  Cancelado = 'cancelado'
+  Pending = 'pendiente',
+  Ready = 'listo',
+  Cancelled = 'cancelado',
 }
 
-/**
- * Categorías de productos del menú
- */
 export enum ProductCategory {
-  Comida = 'Comida',
-  Bebida = 'Bebida',
-  Postre = 'Postre',
-  Otros = 'Otros'
+  Ensaladas = 1,
+  Sopas = 2,
+  Pizza = 3,
+  Pasta = 4,
+  Arroces = 5,
+  Hamburguesas = 6,
+  Sandwiches = 7,
+  Carnes = 8,
+  Pescados = 9,
+  Mariscos = 10,
+  Sushi = 11,
+  Salteados = 12,
+  Guarniciones = 13,
+  Postres = 14,
+  Ron = 15,
+  Whisky = 16,
+  Vinos = 17,
+  Cafés = 18,
+  Té = 19,
+  Otros = 20,
 }
 
-/**
- * Roles de usuario en el sistema
- */
 export enum UserRole {
-  Admin = 'admin',
-  Normal = 'normal'
+  Admin = 'administrador',
+  Operator = 'operario',
 }
 
 // ==========================================
-// INTERFACES PRINCIPALES
+// VALUE OBJECTS (simplificados para frontend)
 // ==========================================
 
-/**
- * Representa un item dentro de un pedido
- * Se usa tanto para crear como para mostrar pedidos
- * 
- * NOTA: Para compatibilidad con el código existente, se mantienen
- * las propiedades 'name' y 'price'. Cuando se migre al backend,
- * se usará productId para obtener los datos del producto.
- */
+export interface Address {
+  city: string;
+  municipality: string;
+  mainStreet: string;
+  street1: string;
+  street2?: string;
+  houseNumber: string;
+  apartmentNumber?: string;
+  additionalInfo?: string;
+}
+
+export interface Money {
+  amount: number;
+  currency: 'CUP' | 'USD' | 'EUR';
+}
+
+// ==========================================
+// ENTIDADES PRINCIPALES
+// ==========================================
+
 export interface OrderItem {
-  productId?: number;  // ID del producto (para backend)
-  productName?: string; // Nombre del producto (para mostrar)
-  name: string;         // Alias para compatibilidad (código existente)
+  productId: string; // GUID del backend (string) o ID numérico mock
+  productName: string;
   quantity: number;
-  unitPrice?: number;   // Precio unitario (para backend, opcional para mock)
-  price: number;        // Alias para compatibilidad (código existente)
-  // NOTA: El subtotal se calcula como quantity * price (o quantity * unitPrice)
+  unitPrice: number; // Precio unitario en la moneda del pedido
+
+  // Alias para compatibilidad con código existente (usar productName y unitPrice)
+  name?: string; // = productName
+  price?: number; // = unitPrice
 }
 
-/**
- * Representa un pedido completo
- * Coincide con la entidad Order del backend
- */
 export interface Order {
-  id: number;
-  customerId?: number;  // ID del cliente (para cuando se implemente gestión de clientes)
-  clientName: string;   // Nombre del cliente (se mantiene por compatibilidad)
-  address: string;
-  phone?: string;
-  email?: string;       // Email del cliente (opcional)
-  
-  items: OrderItem[];
-  total: number;
-  
-  // Fechas y tiempos
-  orderTime: string;           // Cuando se creó el pedido (ISO string)
-  desiredDeliveryTime: string; // "inmediatamente" o hora específica (HH:mm)
-  deliveryDateTime?: string;   // DateTime completo para entrega (opcional)
-  receivedTime?: string;       // Cuando se recibió el pedido (backend)
-  readyTime?: string;          // Cuando se marcó como listo (ISO string)
-  
-  // Estado
-  status: OrderStatus | 'pendiente' | 'listo' | 'cancelado';
-  isCanceled: boolean;         // Flag alternativo para estado cancelado
-  
-  // Metadata (solo lectura, se genera en backend)
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-/**
- * Representa un producto del menú
- * Coincide con la entidad Product del backend
- */
-export interface Product {
-  id: number;
-  name: string;
-  description: string;
-  ingredients: string;
-  elaboracion?: string;      // Instrucciones de preparación (opcional)
-  price: number;
-  available: boolean;
-  category: ProductCategory | 'Comida' | 'Bebida' | 'Postre' | 'Otros';
-  imageUrl?: string;
-  
-  // Metadata (solo lectura, se genera en backend)
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-/**
- * Alias para compatibilidad con el código existente
- * MenuItem es lo mismo que Product
- */
-export type MenuItem = Product;
-
-/**
- * Representa un cliente
- * Para cuando se implemente la gestión de clientes en el backend
- */
-export interface Customer {
-  id: number;
-  nombre: string;
-  telefono: string;
-  direccion: string;
-  email?: string;
-  createdAt?: string;
-  
-  // Pedidos asociados (solo para vistas detalladas, no se usa en listas)
-  pedidos?: Order[];
-}
-
-/**
- * Representa un usuario del sistema
- * Coincide con la entidad User del backend
- */
-export interface User {
-  id: number;
-  fullName: string;
-  name?: string;  // Alias para compatibilidad con código existente
-  email: string;
-  phone: string;
-  role: UserRole | 'admin' | 'normal';
-  
-  // Solo para creación/actualización (nunca se recibe del backend)
-  password?: string;
-  
-  // Metadata (solo lectura, se genera en backend)
-  createdAt?: string;
-  updatedAt?: string;
-  lastLogin?: string;
-}
-
-/**
- * Tasas de cambio de moneda
- */
-export interface ExchangeRate {
-  usd: number;
-  eur: number;
-  lastUpdated: string;
-}
-
-// ==========================================
-// INTERFACES PARA PETICIONES AL BACKEND
-// ==========================================
-
-/**
- * DTO para crear un nuevo pedido
- * Se envía al endpoint POST /api/orders
- */
-export interface CreateOrderRequest {
-  customerId?: number;
+  id: string;
+  customerId?: string;
   clientName: string;
-  address: string;
-  phone?: string;
-  email?: string;
-  items: {
-    productId: number;
-    quantity: number;
-  }[];
-  desiredDeliveryTime: string;
+  phone?: string; // Número de teléfono normalizado
+  deliveryAddress: Address | string; // Puede ser objeto o string plano (para mock)
+  items: OrderItem[];
+  total: number; // Suma de subtotales (quantity * unitPrice)
+  orderTimeUtc: string; // ISO string (UTC)
+  desiredDeliveryTimeUtc: string; // ISO string (UTC)
+  readyTimeUtc?: string;
+  canceledTimeUtc?: string;
+  status: OrderStatus;
+  // Metadata
+  createdAtUtc?: string;
+  updatedAtUtc?: string;
 }
 
-/**
- * DTO para actualizar el estado de un pedido
- * Se envía al endpoint PATCH /api/orders/{id}/status
- */
-export interface UpdateOrderStatusRequest {
-  status: OrderStatus | 'pendiente' | 'listo' | 'cancelado';
-  readyTime?: string;
+export interface Customer {
+  id: string;
+  fullName: string;
+  phone: string;
+  defaultAddress: Address;
+  createdAtUtc?: string;
+  updatedAtUtc?: string;
 }
 
-/**
- * DTO para crear/actualizar un producto
- * Se envía a POST /api/products o PUT /api/products/{id}
- */
-export interface CreateProductRequest {
+export interface Product {
+  id: string;
   name: string;
   description: string;
-  ingredients: string;
-  elaboracion?: string;
-  price: number;
-  available: boolean;
-  category: ProductCategory | 'Comida' | 'Bebida' | 'Postre' | 'Otros';
+  detailedDescription: string;
   imageUrl?: string;
+  price: Money; // { amount, currency }
+  category: ProductCategory;
+  isActive: boolean;
+  createdAtUtc?: string;
+  updatedAtUtc?: string;
 }
 
-/**
- * DTO para login de usuarios
- * Se envía a POST /api/auth/login
- */
+export interface User {
+  id: string;
+  fullName: string;
+  phone?: string; // Opcional según dominio
+  role: UserRole;
+  // Solo para creación/actualización (nunca se devuelve del backend)
+  password?: string;
+  // Metadata
+  lastLoginUtc?: string;
+  isActive: boolean;
+  createdAtUtc?: string;
+  updatedAtUtc?: string;
+}
+
+export interface ExchangeRate {
+  usdToCup: number;
+  eurToCup: number;
+  lastUpdatedUtc: string;
+}
+
+// ==========================================
+// DTOs PARA PETICIONES AL BACKEND
+// ==========================================
+
 export interface LoginRequest {
-  email: string;
+  fullName: string;
   password: string;
 }
 
-/**
- * Respuesta de login
- * Se recibe de POST /api/auth/login
- */
 export interface LoginResponse {
   token: string;
-  refreshToken?: string;
+  expiresAtUtc: string;
   user: User;
-  expiresAt: string;
 }
 
-/**
- * Respuesta paginada genérica
- * Para endpoints que devuelven listas paginadas
- */
+export interface CreateOrderRequest {
+  customerId?: string;
+  clientName: string;
+  phone: string;
+  deliveryAddress: Address;
+  items: Array<{ productId: string; quantity: number }>;
+  desiredDeliveryTimeUtc: string; // ISO string
+}
+
+export interface UpdateOrderStatusRequest {
+  status: OrderStatus;
+  readyTimeUtc?: string;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description: string;
+  detailedDescription: string;
+  imageUrl?: string;
+  price: Money;
+  category: ProductCategory;
+  isActive: boolean;
+}
+
+export interface CreateUserRequest {
+  fullName: string;
+  phone?: string;
+  role: UserRole;
+  password: string;
+}
+
+export interface UpdateUserRequest {
+  fullName?: string;
+  phone?: string;
+  role?: UserRole;
+  password?: string;
+}
+
 export interface PagedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
   pageSize: number;
-  totalPages: number;
-  hasPrevious: boolean;
-  hasNext: boolean;
-}
-
-/**
- * Respuesta de error del backend
- */
-export interface ErrorResponse {
-  statusCode: number;
-  message: string;
-  errors?: Record<string, string[]>;
-  timestamp: string;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }

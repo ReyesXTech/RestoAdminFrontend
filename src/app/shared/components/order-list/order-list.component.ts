@@ -20,9 +20,9 @@ export class OrderListComponent {
 
   // Outputs
   viewOrder = output<Order>();
-  markReady = output<number>();
+  markReady = output<string>();
   cancelOrder = output<Order>();
-  restoreToPending = output<number>();
+  restoreToPending = output<string>();
 
   get listTitle(): string {
     return this.type() === 'pendientes' ? 'PENDIENTES' : 'LISTOS';
@@ -36,7 +36,7 @@ export class OrderListComponent {
 
   get iconSvg(): string {
     return this.type() === 'pendientes'
-      ? 'pulse-dot'  // CSS class for pending
+      ? 'pulse-dot' // CSS class for pending
       : 'list-icon'; // SVG icon for ready
   }
 }

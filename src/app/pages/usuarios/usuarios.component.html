@@ -9,7 +9,7 @@
       </svg>
       Gestión de Usuarios
     </h1>
-    @if (currentUser()?.role === 'admin') {
+    @if (currentUser()?.role === UserRole.Admin) {
       <button (click)="openAddModal()" class="add-btn">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
           <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
@@ -26,9 +26,8 @@
         <tr>
           <th>Nombre</th>
           <th>Teléfono</th>
-          <th>Email</th>
           <th class="w-40">Rol</th>
-          @if (currentUser()?.role === 'admin') {
+          @if (currentUser()?.role === UserRole.Admin) {
             <th class="text-right w-32">Acciones</th>
           }
         </tr>
@@ -37,20 +36,19 @@
         @for (user of users(); track user.id) {
           <tr (click)="openEditModal(user)" class="user-row">
             <td>
-              <div class="user-name">{{ user.name }}</div>
+              <div class="user-name">{{ user.fullName }}</div>
             </td>
             <td class="user-phone">{{ user.phone }}</td>
-            <td class="user-email">{{ user.email || 'N/A' }}</td>
             <td>
               <span
                 class="role-badge"
-                [class.admin]="user.role === 'admin'"
-                [class.normal]="user.role === 'normal'"
+                [class.admin]="user.role === UserRole.Admin"
+                [class.operario]="user.role === 'operario'"
               >
-                {{ user.role === 'normal' ? 'Operario' : 'Admin' }}
+                {{ user.role === 'operario' ? 'Operario' : 'Admin' }}
               </span>
             </td>
-            @if (currentUser()?.role === 'admin') {
+            @if (currentUser()?.role === UserRole.Admin) {
               <td>
                 <div class="actions" (click)="$event.stopPropagation()">
                   <div class="action-btn-wrapper">
@@ -92,7 +90,7 @@
   </div>
 </div>
 
-<!-- Add User Modal -->
+<!-- Add/Edit User Modal (sin email) -->
 @if (showModal) {
   <div class="modal-overlay" (click)="closeModal()">
     <div class="modal-content modal-fade-in" (click)="$event.stopPropagation()">
@@ -119,15 +117,6 @@
         <div class="form-group">
           <label>Número de Teléfono</label>
           <input [(ngModel)]="formPhone" name="phone" type="text" placeholder="Ej: +53 55555555" />
-        </div>
-        <div class="form-group">
-          <label>Correo Electrónico</label>
-          <input
-            [(ngModel)]="formEmail"
-            name="email"
-            type="email"
-            placeholder="Ej: usuario@resto.com"
-          />
         </div>
         <div class="form-group">
           <label>Rol de Usuario</label>
@@ -163,7 +152,7 @@
       </div>
       <h3 class="delete-modal-title">¿Eliminar Usuario?</h3>
       <p class="delete-modal-message">
-        Estás a punto de eliminar <strong>{{ userToDelete()!.name }}</strong>
+        Estás a punto de eliminar <strong>{{ userToDelete()!.fullName }}</strong>
       </p>
       <p class="delete-modal-submessage">
         Esta acción no se puede deshacer. El usuario será eliminado permanentemente.

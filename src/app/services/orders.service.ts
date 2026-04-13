@@ -1,582 +1,265 @@
-// ==========================================
-// ORDERS SERVICE
-// ==========================================
-// Servicio para gestión de pedidos
-// Endpoints relacionados:
-// - GET /api/orders (todos los pedidos)
-// - GET /api/orders?status=pendiente (filtrar por estado)
-// - GET /api/orders/{id} (pedido específico)
-// - POST /api/orders (crear pedido)
-// - PATCH /api/orders/{id}/status (actualizar estado)
-// - DELETE /api/orders/{id} (cancelar pedido)
-
 import { Injectable, signal, computed } from '@angular/core';
-import { Order, OrderStatus } from '../models/models';
+import { Order, OrderStatus, CreateOrderRequest } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
-  // Estado de pedidos
   private _orders = signal<Order[]>([]);
+
   readonly orders = this._orders.asReadonly();
 
   constructor() {
-    // Initialize orders with sample data (MOCK)
-    // FUTURO: this.loadOrders()
     this._orders.set(this.createSampleOrders());
   }
 
-  // ==========================================
-  // SIGNALS COMPUTADAS - FILTROS DE PEDIDOS
-  // ==========================================
-
+  // Computed signals (filtros) – se mantienen similares pero usando nuevos campos
   readonly todayOrders = computed(() => {
-    // FUTURO: GET /api/orders?date=today&status!=cancelado
     const today = new Date().toDateString();
     return this._orders().filter(
-      (o) => new Date(o.orderTime).toDateString() === today && o.status !== 'cancelado',
+      (o) =>
+        new Date(o.orderTimeUtc).toDateString() === today && o.status !== OrderStatus.Cancelled,
     );
   });
 
   readonly pendingOrders = computed(() => {
-    // FUTURO: GET /api/orders?status=pendiente&date=today
     const today = new Date().toDateString();
     return this._orders()
-      .filter((o) => new Date(o.orderTime).toDateString() === today && o.status === 'pendiente')
+      .filter(
+        (o) =>
+          new Date(o.orderTimeUtc).toDateString() === today && o.status === OrderStatus.Pending,
+      )
       .sort((a, b) => {
-        const deliveryCompare = this.compareDeliveryTime(
-          a.desiredDeliveryTime,
-          b.desiredDeliveryTime,
+        // Ordenar por desiredDeliveryTimeUtc
+        return (
+          new Date(a.desiredDeliveryTimeUtc).getTime() -
+          new Date(b.desiredDeliveryTimeUtc).getTime()
         );
-        if (deliveryCompare !== 0) return deliveryCompare;
-        return new Date(a.orderTime).getTime() - new Date(b.orderTime).getTime();
       });
   });
 
   readonly listosOrders = computed(() => {
-    // FUTURO: GET /api/orders?status=listo&date=today
     const today = new Date().toDateString();
     return this._orders()
-      .filter((o) => new Date(o.orderTime).toDateString() === today && o.status === 'listo')
+      .filter(
+        (o) => new Date(o.orderTimeUtc).toDateString() === today && o.status === OrderStatus.Ready,
+      )
       .sort((a, b) => {
-        const deliveryCompare = this.compareDeliveryTime(
-          a.desiredDeliveryTime,
-          b.desiredDeliveryTime,
-        );
+        const deliveryCompare =
+          new Date(a.desiredDeliveryTimeUtc).getTime() -
+          new Date(b.desiredDeliveryTimeUtc).getTime();
         if (deliveryCompare !== 0) return deliveryCompare;
-        const aReadyTime = a.readyTime ? new Date(a.readyTime).getTime() : Infinity;
-        const bReadyTime = b.readyTime ? new Date(b.readyTime).getTime() : Infinity;
-        return aReadyTime - bReadyTime;
+        const aReady = a.readyTimeUtc ? new Date(a.readyTimeUtc).getTime() : Infinity;
+        const bReady = b.readyTimeUtc ? new Date(b.readyTimeUtc).getTime() : Infinity;
+        return aReady - bReady;
       });
   });
 
-  readonly cancelledOrders = computed(() => {
-    // FUTURO: GET /api/orders?status=cancelado
-    return this._orders()
-      .filter((o) => o.status === 'cancelado')
-      .sort((a, b) => new Date(b.orderTime).getTime() - new Date(a.orderTime).getTime());
-  });
+  readonly cancelledOrders = computed(() =>
+    this._orders().filter((o) => o.status === OrderStatus.Cancelled),
+  );
 
   readonly historyOrders = computed(() => {
-    // FUTURO: GET /api/orders?date!=today
     const today = new Date().toDateString();
-    return this._orders()
-      .filter((o) => new Date(o.orderTime).toDateString() !== today)
-      .sort((a, b) => new Date(b.orderTime).getTime() - new Date(a.orderTime).getTime());
+    return this._orders().filter((o) => new Date(o.orderTimeUtc).toDateString() !== today);
   });
 
-  // Signals computadas para estadísticas
   readonly totalOrders = computed(() => this._orders().length);
   readonly pendingOrdersCount = computed(() => this.pendingOrders().length);
   readonly listosOrdersCount = computed(() => this.listosOrders().length);
   readonly totalRevenue = computed(() =>
     this._orders()
-      .filter((o) => o.status === 'listo')
+      .filter((o) => o.status === OrderStatus.Ready)
       .reduce((sum, o) => sum + o.total, 0),
   );
 
-  // ==========================================
-  // MÉTODOS DE GESTIÓN DE PEDIDOS
-  // ==========================================
-
-  /**
-   * Actualiza el estado de un pedido
-   * MOCK: Reemplazar con llamada HTTP PATCH /api/orders/{id}/status
-   */
-  updateOrderStatus(id: number, status: Order['status'], readyTime?: string): void {
-    // FUTURO:
-    // const request: UpdateOrderStatusRequest = { status, readyTime };
-    // this.http.patch<Order>(`${this.apiUrl}/orders/${id}/status`, request).subscribe(updated => {
-    //   this._orders.update(orders => orders.map(o => o.id === id ? updated : o));
-    // });
-
+  updateOrderStatus(id: string, status: OrderStatus, readyTimeUtc?: string): void {
     this._orders.update((orders) =>
-      orders.map((o) => {
-        if (o.id === id) {
-          const updatedOrder = { ...o, status };
-          if (status === 'listo' && readyTime) {
-            updatedOrder.readyTime = readyTime;
-          }
-          return updatedOrder;
-        }
-        return o;
-      }),
+      orders.map((o) =>
+        o.id === id
+          ? {
+              ...o,
+              status,
+              readyTimeUtc:
+                status === OrderStatus.Ready
+                  ? readyTimeUtc || new Date().toISOString()
+                  : o.readyTimeUtc,
+              canceledTimeUtc:
+                status === OrderStatus.Cancelled ? new Date().toISOString() : o.canceledTimeUtc,
+            }
+          : o,
+      ),
     );
   }
 
-  /**
-   * Cancela un pedido
-   * MOCK: Reemplazar con llamada HTTP DELETE /api/orders/{id}
-   * o PATCH /api/orders/{id}/status con status='cancelado'
-   */
-  cancelOrder(id: number): void {
-    this.updateOrderStatus(id, 'cancelado');
+  cancelOrder(id: string): void {
+    this.updateOrderStatus(id, OrderStatus.Cancelled);
   }
 
-  /**
-   * Crea un nuevo pedido
-   * MOCK: Reemplazar con llamada HTTP POST /api/orders
-   */
-  createOrder(order: Omit<Order, 'id' | 'status' | 'isCanceled'>): void {
-    const newId = Math.max(...this._orders().map((o) => o.id), 0) + 1;
+  createOrder(orderData: CreateOrderRequest): void {
+    const newId = (Math.max(...this._orders().map((o) => Number(o.id)), 0) + 1).toString();
+    const total = orderData.items.reduce((sum, item) => sum + item.quantity * 10, 0); // Mock: precio ficticio
     const newOrder: Order = {
-      ...order,
       id: newId,
-      status: 'pendiente',
-      isCanceled: false,
+      customerId: orderData.customerId,
+      clientName: orderData.clientName,
+      phone: orderData.phone,
+      deliveryAddress: orderData.deliveryAddress,
+      items: orderData.items.map((item) => ({
+        productId: item.productId,
+        productName: `Producto ${item.productId}`,
+        quantity: item.quantity,
+        unitPrice: 10,
+      })),
+      total,
+      orderTimeUtc: new Date().toISOString(),
+      desiredDeliveryTimeUtc: orderData.desiredDeliveryTimeUtc,
+      status: OrderStatus.Pending,
     };
     this._orders.update((orders) => [...orders, newOrder]);
   }
 
-  /**
-   * Obtiene un pedido por ID
-   */
-  getOrderById(id: number): Order | undefined {
+  getOrderById(id: string): Order | undefined {
     return this._orders().find((o) => o.id === id);
   }
 
-  // ==========================================
-  // MÉTODOS AUXILIARES
-  // ==========================================
-
-  /**
-   * Compara tiempos de entrega para ordenamiento
-   */
-  private compareDeliveryTime(a: string, b: string): number {
-    if (a === 'inmediatamente') return -1;
-    if (b === 'inmediatamente') return 1;
-    return a.localeCompare(b);
-  }
-
-  /**
-   * Crea datos de muestra (MOCK)
-   * Eliminar cuando se migre al backend
-   */
+  // Método auxiliar para crear datos de muestra (mock) – se ajusta a nuevo modelo
   private createSampleOrders(): Order[] {
     const now = new Date();
-    const yesterday = new Date(now.getTime() - 86400000);
-    const twoDaysAgo = new Date(now.getTime() - 172800000);
-    const threeDaysAgo = new Date(now.getTime() - 259200000);
-
+    const todayStr = now.toISOString();
+    const hourLater = new Date(now.getTime() + 3600000).toISOString();
+    // Funciones helper para generar horas relativas
+    const hoursFromNow = (h: number) => new Date(now.getTime() + h * 3600000).toISOString();
+    const hoursAgo = (h: number) => new Date(now.getTime() - h * 3600000).toISOString();
+    // ... (crear pedidos mock usando los nuevos campos)
+    // Por brevedad, devolvemos un array vacío; en la implementación real puedes generar mocks válidos.
     return [
-      // Today's orders - Pendientes
       {
-        id: 1,
+        id: '1',
         clientName: 'Juan Perez',
-        address: 'Av. Siempre Viva 123',
-        total: 24.5,
-        status: 'pendiente',
-        items: [
-          { name: 'Pizza Margarita', price: 12.0, unitPrice: 12.0, quantity: 1 },
-          { name: 'Hamburguesa Clásica', price: 10.5, unitPrice: 10.5, quantity: 1 },
-          { name: 'Coca Cola', price: 2.0, unitPrice: 2.0, quantity: 1 },
-        ],
-        desiredDeliveryTime: 'inmediatamente',
-        orderTime: now.toISOString(),
         phone: '5551234',
-        isCanceled: false,
+        deliveryAddress: 'Av. Siempre Viva 123',
+        items: [{ productId: '101', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12 }],
+        total: 12,
+        orderTimeUtc: todayStr,
+        desiredDeliveryTimeUtc: hourLater,
+        status: OrderStatus.Pending,
       },
+      // PENDIENTES (3)
       {
-        id: 2,
-        clientName: 'Maria Gomez',
-        address: 'Calle Falsa 123',
-        total: 10.5,
-        status: 'pendiente',
-        items: [{ name: 'Hamburguesa Clásica', price: 10.5, unitPrice: 10.5, quantity: 1 }],
-        desiredDeliveryTime: '14:30',
-        orderTime: now.toISOString(),
-        phone: '5555678',
-        isCanceled: false,
-      },
-      {
-        id: 3,
-        clientName: 'Carlos Ruiz',
-        address: 'Centro 456',
-        total: 18.0,
-        status: 'pendiente',
+        id: 'ord-001',
+        clientName: 'Juan Pérez',
+        phone: '555-1234',
+        deliveryAddress: 'Calle Falsa 123, Centro',
         items: [
-          { name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 1 },
-          { name: 'Cerveza', price: 3.0, unitPrice: 3.0, quantity: 1 },
+          { productId: '1', productName: 'Ensalada César', quantity: 2, unitPrice: 8.5 },
+          { productId: '2', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12.0 },
         ],
-        desiredDeliveryTime: '15:00',
-        orderTime: now.toISOString(),
-        phone: '5559012',
-        isCanceled: false,
-      },
-      {
-        id: 4,
-        clientName: 'Ana Martinez',
-        address: 'Norte 789',
-        total: 32.0,
-        status: 'pendiente',
-        items: [
-          { name: 'Pizza Pepperoni', price: 14.0, unitPrice: 14.0, quantity: 2 },
-          { name: 'Coca Cola', price: 2.0, unitPrice: 2.0, quantity: 2 },
-        ],
-        desiredDeliveryTime: '16:00',
-        orderTime: now.toISOString(),
-        phone: '5553456',
-        isCanceled: false,
-      },
-      {
-        id: 5,
-        clientName: 'Luis Torres',
-        address: 'Sur 321',
-        total: 25.5,
-        status: 'pendiente',
-        items: [
-          { name: 'Hamburguesa Doble', price: 15.0, unitPrice: 15.0, quantity: 1 },
-          { name: 'Papas Fritas', price: 5.5, unitPrice: 5.5, quantity: 1 },
-          { name: 'Cerveza', price: 5.0, unitPrice: 5.0, quantity: 1 },
-        ],
-        desiredDeliveryTime: '17:30',
-        orderTime: now.toISOString(),
-        phone: '5557890',
-        isCanceled: false,
-      },
-      {
-        id: 6,
-        clientName: 'Sofia Blanco',
-        address: 'Este 654',
-        total: 42.0,
-        status: 'pendiente',
-        items: [
-          { name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 2 },
-          { name: 'Sopa Miso', price: 6.0, unitPrice: 6.0, quantity: 1 },
-          { name: 'Sake', price: 6.0, unitPrice: 6.0, quantity: 1 },
-        ],
-        desiredDeliveryTime: '18:00',
-        orderTime: now.toISOString(),
-        phone: '5551122',
-        isCanceled: false,
-      },
-
-      // Today's orders - Listos
-      {
-        id: 7,
-        clientName: 'Pedro Sanchez',
-        address: 'Oeste 987',
-        total: 15.0,
-        status: 'listo',
-        items: [
-          { name: 'Tiramisú', price: 5.0, unitPrice: 5.0, quantity: 1 },
-          { name: 'Café', price: 2.5, unitPrice: 2.5, quantity: 2 },
-          { name: 'Agua', price: 5.0, unitPrice: 5.0, quantity: 1 },
-        ],
-        desiredDeliveryTime: 'inmediatamente',
-        orderTime: now.toISOString(),
-        phone: '5553344',
-        readyTime: new Date(now.getTime() - 300000).toISOString(),
-        isCanceled: false,
-      },
-      {
-        id: 8,
-        clientName: 'Laura Diaz',
-        address: 'Prado 50',
-        total: 28.0,
-        status: 'listo',
-        items: [
-          { name: 'Pizza Margarita', price: 12.0, unitPrice: 12.0, quantity: 1 },
-          { name: 'Ensalada César', price: 8.0, unitPrice: 8.0, quantity: 1 },
-          { name: 'Cerveza', price: 4.0, unitPrice: 4.0, quantity: 2 },
-        ],
-        desiredDeliveryTime: '13:00',
-        orderTime: now.toISOString(),
-        phone: '5555566',
-        readyTime: new Date(now.getTime() - 600000).toISOString(),
-        isCanceled: false,
-      },
-      {
-        id: 9,
-        clientName: 'Miguel Angel',
-        address: 'Reforma 222',
-        total: 19.5,
-        status: 'listo',
-        items: [
-          { name: 'Hamburguesa Clásica', price: 10.5, unitPrice: 10.5, quantity: 1 },
-          { name: 'Papas Fritas', price: 5.0, unitPrice: 5.0, quantity: 1 },
-          { name: 'Coca Cola', price: 2.0, unitPrice: 2.0, quantity: 2 },
-        ],
-        desiredDeliveryTime: '12:30',
-        orderTime: now.toISOString(),
-        phone: '5557788',
-        readyTime: new Date(now.getTime() - 900000).toISOString(),
-        isCanceled: false,
-      },
-      {
-        id: 10,
-        clientName: 'Carmen Lopez',
-        address: 'Juarez 333',
-        total: 35.0,
-        status: 'listo',
-        items: [
-          { name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 2 },
-          { name: 'Cerveza', price: 2.5, unitPrice: 2.5, quantity: 2 },
-        ],
-        desiredDeliveryTime: '14:00',
-        orderTime: now.toISOString(),
-        phone: '5559900',
-        readyTime: new Date(now.getTime() - 400000).toISOString(),
-        isCanceled: false,
-      },
-      {
-        id: 11,
-        clientName: 'Roberto Flores',
-        address: 'Madero 444',
-        total: 22.0,
-        status: 'listo',
-        items: [
-          { name: 'Pizza Pepperoni', price: 14.0, unitPrice: 14.0, quantity: 1 },
-          { name: 'Ensalada', price: 6.0, unitPrice: 6.0, quantity: 1 },
-          { name: 'Agua', price: 2.0, unitPrice: 2.0, quantity: 1 },
-        ],
-        desiredDeliveryTime: '11:30',
-        orderTime: now.toISOString(),
-        phone: '5551100',
-        readyTime: new Date(now.getTime() - 1200000).toISOString(),
-        isCanceled: false,
-      },
-      {
-        id: 12,
-        clientName: 'Patricia Morales',
-        address: 'Allende 555',
-        total: 45.0,
-        status: 'listo',
-        items: [{ name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 3 }],
-        desiredDeliveryTime: '15:30',
-        orderTime: now.toISOString(),
-        phone: '5552200',
-        readyTime: new Date(now.getTime() - 500000).toISOString(),
-        isCanceled: false,
-      },
-      {
-        id: 13,
-        clientName: 'Fernando Castro',
-        address: 'Morelos 666',
-        total: 16.5,
-        status: 'listo',
-        items: [
-          { name: 'Hamburguesa Doble', price: 15.0, unitPrice: 15.0, quantity: 1 },
-          { name: 'Coca Cola', price: 1.5, unitPrice: 1.5, quantity: 1 },
-        ],
-        desiredDeliveryTime: '16:30',
-        orderTime: now.toISOString(),
-        phone: '5553300',
-        readyTime: new Date(now.getTime() - 350000).toISOString(),
-        isCanceled: false,
-      },
-      {
-        id: 14,
-        clientName: 'Gabriela Ortiz',
-        address: 'Zaragoza 777',
-        total: 38.0,
-        status: 'listo',
-        items: [
-          { name: 'Pizza Margarita', price: 12.0, unitPrice: 12.0, quantity: 2 },
-          { name: 'Cerveza', price: 7.0, unitPrice: 7.0, quantity: 2 },
-        ],
-        desiredDeliveryTime: '17:00',
-        orderTime: now.toISOString(),
-        phone: '5554400',
-        readyTime: new Date(now.getTime() - 450000).toISOString(),
-        isCanceled: false,
-      },
-
-      // Yesterday's orders - Cancelados
-      {
-        id: 15,
-        clientName: 'Ana Ruiz',
-        address: 'Prado 50',
-        total: 15.0,
-        status: 'cancelado',
-        items: [
-          { name: 'Pizza Margarita', price: 12.0, unitPrice: 12.0, quantity: 1 },
-          { name: 'Coca Cola', price: 3.0, unitPrice: 3.0, quantity: 1 },
-        ],
-        desiredDeliveryTime: '12:00',
-        orderTime: yesterday.toISOString(),
-        phone: '5553456',
-        isCanceled: true,
-      },
-      {
-        id: 16,
-        clientName: 'Jorge Ramirez',
-        address: 'Luna 888',
-        total: 27.0,
-        status: 'cancelado',
-        items: [
-          { name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 1 },
-          { name: 'Sopa Miso', price: 6.0, unitPrice: 6.0, quantity: 1 },
-          { name: 'Cerveza', price: 6.0, unitPrice: 6.0, quantity: 1 },
-        ],
-        desiredDeliveryTime: '19:00',
-        orderTime: yesterday.toISOString(),
-        phone: '5556600',
-        isCanceled: true,
-      },
-      {
-        id: 17,
-        clientName: 'Monica Herrera',
-        address: 'Sol 999',
-        total: 33.5,
-        status: 'cancelado',
-        items: [
-          { name: 'Pizza Pepperoni', price: 14.0, unitPrice: 14.0, quantity: 1 },
-          { name: 'Hamburguesa Clásica', price: 10.5, unitPrice: 10.5, quantity: 1 },
-          { name: 'Papas Fritas', price: 5.0, unitPrice: 5.0, quantity: 1 },
-          { name: 'Coca Cola', price: 2.0, unitPrice: 2.0, quantity: 2 },
-        ],
-        desiredDeliveryTime: '20:00',
-        orderTime: yesterday.toISOString(),
-        phone: '5557700',
-        isCanceled: true,
-      },
-
-      // Yesterday's orders - Completados
-      {
-        id: 18,
-        clientName: 'Luis Sosa',
-        address: 'Parque 10',
-        total: 8.5,
-        status: 'listo',
-        items: [{ name: 'Hamburguesa Clásica', price: 8.5, unitPrice: 8.5, quantity: 1 }],
-        desiredDeliveryTime: '19:00',
-        orderTime: yesterday.toISOString(),
-        phone: '5557890',
-        isCanceled: false,
-      },
-      {
-        id: 19,
-        clientName: 'Elena Vargas',
-        address: 'Plaza 111',
-        total: 52.0,
-        status: 'listo',
-        items: [
-          { name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 2 },
-          { name: 'Sake', price: 11.0, unitPrice: 11.0, quantity: 1 },
-          { name: 'Tiramisú', price: 5.5, unitPrice: 5.5, quantity: 2 },
-        ],
-        desiredDeliveryTime: '21:00',
-        orderTime: yesterday.toISOString(),
-        phone: '5558800',
-        isCanceled: false,
-      },
-      {
-        id: 20,
-        clientName: 'Ricardo Mendez',
-        address: 'Calle 222',
         total: 29.0,
-        status: 'listo',
+        orderTimeUtc: hoursAgo(0.5), // hace media hora
+        desiredDeliveryTimeUtc: hoursFromNow(1.5),
+        status: OrderStatus.Pending,
+      },
+      {
+        id: 'ord-002',
+        clientName: 'María González',
+        phone: '555-5678',
+        deliveryAddress: 'Av. Libertador 456, Planta Baja',
         items: [
-          { name: 'Pizza Margarita', price: 12.0, unitPrice: 12.0, quantity: 1 },
-          { name: 'Pizza Pepperoni', price: 14.0, unitPrice: 14.0, quantity: 1 },
-          { name: 'Cerveza', price: 3.0, unitPrice: 3.0, quantity: 1 },
+          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 1, unitPrice: 14.0 },
         ],
-        desiredDeliveryTime: '20:30',
-        orderTime: yesterday.toISOString(),
-        phone: '5559911',
-        isCanceled: false,
+        total: 14.0,
+        orderTimeUtc: hoursAgo(0.2),
+        desiredDeliveryTimeUtc: hoursFromNow(2),
+        status: OrderStatus.Pending,
+      },
+      {
+        id: 'ord-003',
+        clientName: 'Carlos Ruiz',
+        phone: '555-9012',
+        deliveryAddress: 'Edificio Torres, Apto 5B',
+        items: [
+          { productId: '1', productName: 'Ensalada César', quantity: 1, unitPrice: 8.5 },
+          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 2, unitPrice: 14.0 },
+        ],
+        total: 36.5,
+        orderTimeUtc: hoursAgo(1),
+        desiredDeliveryTimeUtc: hoursFromNow(0.5), // entrega pronta
+        status: OrderStatus.Pending,
       },
 
-      // 2 days ago orders
+      // LISTOS (2)
       {
-        id: 21,
-        clientName: 'Beatriz Silva',
-        address: 'Avenida 333',
-        total: 41.0,
-        status: 'listo',
-        items: [
-          { name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 2 },
-          { name: 'Sopa Miso', price: 6.0, unitPrice: 6.0, quantity: 1 },
-          { name: 'Cerveza', price: 5.0, unitPrice: 5.0, quantity: 2 },
-        ],
-        desiredDeliveryTime: '18:30',
-        orderTime: twoDaysAgo.toISOString(),
-        phone: '5550011',
-        isCanceled: false,
-      },
-      {
-        id: 22,
-        clientName: 'Alberto Navarro',
-        address: 'Boulevard 444',
-        total: 18.5,
-        status: 'cancelado',
-        items: [
-          { name: 'Hamburguesa Doble', price: 15.0, unitPrice: 15.0, quantity: 1 },
-          { name: 'Papas Fritas', price: 3.5, unitPrice: 3.5, quantity: 1 },
-        ],
-        desiredDeliveryTime: '14:00',
-        orderTime: twoDaysAgo.toISOString(),
-        phone: '5550022',
-        isCanceled: true,
-      },
-      {
-        id: 23,
-        clientName: 'Cristina Peña',
-        address: 'Camino 555',
-        total: 36.0,
-        status: 'listo',
-        items: [
-          { name: 'Pizza Margarita', price: 12.0, unitPrice: 12.0, quantity: 2 },
-          { name: 'Ensalada César', price: 8.0, unitPrice: 8.0, quantity: 1 },
-          { name: 'Agua', price: 2.0, unitPrice: 2.0, quantity: 2 },
-        ],
-        desiredDeliveryTime: '19:30',
-        orderTime: twoDaysAgo.toISOString(),
-        phone: '5550033',
-        isCanceled: false,
-      },
-
-      // 3 days ago orders
-      {
-        id: 24,
-        clientName: 'Daniel Reyes',
-        address: 'Carrera 666',
+        id: 'ord-004',
+        clientName: 'Ana Martínez',
+        phone: '555-3456',
+        deliveryAddress: 'Calle del Sol 789',
+        items: [{ productId: '2', productName: 'Pizza Margarita', quantity: 2, unitPrice: 12.0 }],
         total: 24.0,
-        status: 'listo',
-        items: [
-          { name: 'Hamburguesa Clásica', price: 10.5, unitPrice: 10.5, quantity: 1 },
-          { name: 'Hamburguesa Doble', price: 15.0, unitPrice: 15.0, quantity: 1 },
-          { name: 'Coca Cola', price: 2.5, unitPrice: 2.5, quantity: 2 },
-        ],
-        desiredDeliveryTime: '13:00',
-        orderTime: threeDaysAgo.toISOString(),
-        phone: '5550044',
-        isCanceled: false,
+        orderTimeUtc: hoursAgo(2),
+        desiredDeliveryTimeUtc: hoursFromNow(-0.5), // ya pasó la hora deseada
+        status: OrderStatus.Ready,
+        readyTimeUtc: hoursAgo(0.5),
       },
       {
-        id: 25,
-        clientName: 'Fabiana Cruz',
-        address: 'Diagonal 777',
-        total: 55.0,
-        status: 'listo',
+        id: 'ord-005',
+        clientName: 'Pedro Sánchez',
+        phone: '555-7890',
+        deliveryAddress: 'Urbanización Los Pinos, Casa 12',
         items: [
-          { name: 'Sushi Roll', price: 15.0, unitPrice: 15.0, quantity: 3 },
-          { name: 'Sake', price: 10.0, unitPrice: 10.0, quantity: 1 },
+          { productId: '1', productName: 'Ensalada César', quantity: 3, unitPrice: 8.5 },
+          { productId: '2', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12.0 },
         ],
-        desiredDeliveryTime: '20:00',
-        orderTime: threeDaysAgo.toISOString(),
-        phone: '5550055',
-        isCanceled: false,
+        total: 37.5,
+        orderTimeUtc: hoursAgo(3),
+        desiredDeliveryTimeUtc: hoursFromNow(-1),
+        status: OrderStatus.Ready,
+        readyTimeUtc: hoursAgo(1.5),
+      },
+
+      // CANCELADOS (2)
+      {
+        id: 'ord-006',
+        clientName: 'Lucía Fernández',
+        phone: '555-1122',
+        deliveryAddress: 'Barrio La Floresta, Calle 10',
+        items: [
+          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 2, unitPrice: 14.0 },
+        ],
+        total: 28.0,
+        orderTimeUtc: hoursAgo(5),
+        desiredDeliveryTimeUtc: hoursFromNow(-2),
+        status: OrderStatus.Cancelled,
+        canceledTimeUtc: hoursAgo(3),
+      },
+      {
+        id: 'ord-007',
+        clientName: 'Roberto Díaz',
+        phone: '555-3344',
+        deliveryAddress: 'Centro Comercial Las Américas, Local 5',
+        items: [
+          { productId: '2', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12.0 },
+          { productId: '1', productName: 'Ensalada César', quantity: 1, unitPrice: 8.5 },
+        ],
+        total: 20.5,
+        orderTimeUtc: hoursAgo(8),
+        desiredDeliveryTimeUtc: hoursFromNow(-4),
+        status: OrderStatus.Cancelled,
+        canceledTimeUtc: hoursAgo(6),
+      },
+
+      // HISTÓRICO (de días anteriores, no aparecerá en "Hoy")
+      {
+        id: 'ord-008',
+        clientName: 'Sofía Ramírez',
+        phone: '555-5566',
+        deliveryAddress: 'Av. Siempre Viva 742',
+        items: [
+          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 1, unitPrice: 14.0 },
+        ],
+        total: 14.0,
+        orderTimeUtc: new Date(now.getTime() - 86400000).toISOString(), // ayer
+        desiredDeliveryTimeUtc: new Date(now.getTime() - 82800000).toISOString(),
+        status: OrderStatus.Ready,
+        readyTimeUtc: new Date(now.getTime() - 84000000).toISOString(),
       },
     ];
   }

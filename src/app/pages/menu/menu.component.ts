@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
-import { MenuItem } from '../../models/models';
+import { Product, ProductCategory, Money } from '../../models/models';
 
 @Component({
   selector: 'app-menu',
@@ -14,35 +14,59 @@ import { MenuItem } from '../../models/models';
 export class MenuComponent implements OnInit {
   private dataService = inject(DataService);
 
+  readonly ProductCategory = ProductCategory;
+
   readonly menuItems = this.dataService.menuItems;
   readonly exchangeRate = this.dataService.exchangeRate;
-  readonly categories: MenuItem['category'][] = ['Comida', 'Bebida', 'Postre', 'Otros'];
+
+  categories: ProductCategory[] = [
+    ProductCategory.Ensaladas,
+    ProductCategory.Sopas,
+    ProductCategory.Pizza,
+    ProductCategory.Pasta,
+    ProductCategory.Arroces,
+    ProductCategory.Hamburguesas,
+    ProductCategory.Sandwiches,
+    ProductCategory.Carnes,
+    ProductCategory.Pescados,
+    ProductCategory.Mariscos,
+    ProductCategory.Sushi,
+    ProductCategory.Salteados,
+    ProductCategory.Guarniciones,
+    ProductCategory.Postres,
+    ProductCategory.Ron,
+    ProductCategory.Whisky,
+    ProductCategory.Vinos,
+    ProductCategory.Cafés,
+    ProductCategory.Té,
+    ProductCategory.Otros,
+  ];
 
   showModal = false;
   modalMode: 'add' | 'edit' = 'add';
-  editingId: number | null = null;
+  editingId: string | number | null = null;
 
   formName = '';
-  formCategory: MenuItem['category'] = 'Comida';
-  formPrice = 0;
-  formAvailable = true;
+  formCategory: ProductCategory = ProductCategory.Pizza;
+  formPriceAmount = 0;
+  formPriceCurrency: 'CUP' | 'USD' | 'EUR' = 'CUP';
+  formIsActive = true;
   formDescription = '';
-  formIngredients = '';
+  formDetailedDescription = '';
   formImageUrl = '';
 
   usdRate = signal('');
   eurRate = signal('');
   isEditingRate = signal(false);
+
   searchText = signal('');
-  searchCategory = signal<MenuItem['category'] | 'all'>('all');
+  searchCategory = signal<ProductCategory | 'all'>('all');
   searchStatus = signal<'all' | 'active' | 'inactive'>('all');
 
-  // Delete confirmation modal
   showDeleteModal = signal(false);
-  itemToDelete = signal<MenuItem | null>(null);
+  itemToDelete = signal<Product | null>(null);
 
-  // ===== PREVIEW TOOLTIP STATE =====
-  previewItem = signal<MenuItem | null>(null);
+  previewItem = signal<Product | null>(null);
   tooltipPosition = signal({ x: 0, y: 0 });
   tooltipFlipX = signal(false);
   tooltipFlipY = signal(false);
@@ -51,7 +75,26 @@ export class MenuComponent implements OnInit {
   private readonly TOOLTIP_WIDTH = 320;
   private readonly TOOLTIP_HEIGHT = 380;
 
-  // ===== COMPUTED =====
+  // Tooltip para botones de acción (editar/eliminar)
+  activeActionTooltip = signal<string | null>(null);
+  actionTooltipPosition = signal({ x: 0, y: 0 });
+
+  showActionTooltip(event: MouseEvent, action: 'edit' | 'delete'): void {
+    const button = event.currentTarget as HTMLElement;
+    const rect = button.getBoundingClientRect();
+
+    // Centrar horizontalmente sobre el botón, 8px arriba
+    const x = rect.left + rect.width / 2;
+    const y = rect.top - 8;
+
+    this.actionTooltipPosition.set({ x, y });
+    this.activeActionTooltip.set(action);
+  }
+
+  hideActionTooltip(): void {
+    this.activeActionTooltip.set(null);
+  }
+
   filteredMenuItems = computed(() => {
     const items = this.menuItems();
     const text = this.searchText().toLowerCase();
@@ -63,15 +106,13 @@ export class MenuComponent implements OnInit {
       const matchesCategory = category === 'all' || item.category === category;
       const matchesStatus =
         status === 'all' ||
-        (status === 'active' && item.available) ||
-        (status === 'inactive' && !item.available);
-
+        (status === 'active' && item.isActive) ||
+        (status === 'inactive' && !item.isActive);
       return matchesText && matchesCategory && matchesStatus;
     });
   });
 
-  // ===== PREVIEW METHODS =====
-  showPreview(event: MouseEvent, item: MenuItem): void {
+  showPreview(event: MouseEvent, item: Product): void {
     this.previewItem.set(item);
     this.updatePreviewPosition(event);
   }
@@ -79,60 +120,46 @@ export class MenuComponent implements OnInit {
   updatePreviewPosition(event: MouseEvent): void {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-
     let x = event.clientX + this.TOOLTIP_OFFSET;
     let y = event.clientY + this.TOOLTIP_OFFSET;
 
-    // Check if tooltip would overflow right edge
-    const wouldOverflowRight = x + this.TOOLTIP_WIDTH > viewportWidth - 20;
-    const shouldFlipX = wouldOverflowRight;
-
-    if (shouldFlipX) {
+    if (x + this.TOOLTIP_WIDTH > viewportWidth - 20) {
       x = event.clientX - this.TOOLTIP_WIDTH - this.TOOLTIP_OFFSET;
     }
-
-    // Check if tooltip would overflow bottom edge
-    const wouldOverflowBottom = y + this.TOOLTIP_HEIGHT > viewportHeight - 20;
-    const shouldFlipY = wouldOverflowBottom;
-
-    if (shouldFlipY) {
+    if (y + this.TOOLTIP_HEIGHT > viewportHeight - 20) {
       y = event.clientY - this.TOOLTIP_HEIGHT - this.TOOLTIP_OFFSET;
     }
-
-    // Ensure minimum bounds
     x = Math.max(10, x);
     y = Math.max(10, y);
-
     this.tooltipPosition.set({ x, y });
-    this.tooltipFlipX.set(shouldFlipX);
-    this.tooltipFlipY.set(shouldFlipY);
   }
 
   hidePreview(): void {
     this.previewItem.set(null);
   }
 
-  // ===== CRUD METHODS =====
   openAddModal(): void {
     this.formName = '';
-    this.formCategory = 'Comida';
-    this.formPrice = 0;
-    this.formAvailable = true;
+    this.formCategory = ProductCategory.Pizza;
+    this.formPriceAmount = 0;
+    this.formPriceCurrency = 'CUP';
+    this.formIsActive = true;
     this.formDescription = '';
-    this.formIngredients = '';
+    this.formDetailedDescription = '';
     this.formImageUrl = '';
     this.editingId = null;
     this.modalMode = 'add';
     this.showModal = true;
   }
 
-  openEditModal(item: MenuItem): void {
+  openEditModal(item: Product): void {
     this.formName = item.name;
     this.formCategory = item.category;
-    this.formPrice = item.price;
-    this.formAvailable = item.available;
-    this.formDescription = item.description || '';
-    this.formIngredients = item.ingredients || '';
+    this.formPriceAmount = item.price.amount;
+    this.formPriceCurrency = item.price.currency;
+    this.formIsActive = item.isActive;
+    this.formDescription = item.description;
+    this.formDetailedDescription = item.detailedDescription;
     this.formImageUrl = item.imageUrl || '';
     this.editingId = item.id;
     this.modalMode = 'edit';
@@ -143,38 +170,48 @@ export class MenuComponent implements OnInit {
     this.showModal = false;
   }
 
-  saveItem(): void {
-    if (!this.formName.trim()) return;
+  // Agrega este método dentro de la clase MenuComponent
+  getCategoryName(category: ProductCategory): string {
+    return ProductCategory[category]; // Devuelve "Pizza", "Ensaladas", etc.
+  }
 
-    const itemData = {
+  saveItem(): void {
+    if (!this.formName.trim() || this.formPriceAmount <= 0) return;
+
+    const price: Money = {
+      amount: this.formPriceAmount,
+      currency: this.formPriceCurrency,
+    };
+
+    const productData = {
       name: this.formName,
-      category: this.formCategory,
-      price: this.formPrice,
-      available: this.formAvailable,
       description: this.formDescription,
-      ingredients: this.formIngredients,
-      imageUrl: this.formImageUrl,
+      detailedDescription: this.formDetailedDescription,
+      imageUrl: this.formImageUrl || undefined,
+      price: price,
+      category: this.formCategory,
+      isActive: this.formIsActive,
     };
 
     if (this.modalMode === 'add') {
-      this.dataService.addMenuItem(itemData);
+      this.dataService.addMenuItem(productData as Omit<Product, 'id'>);
     } else if (this.editingId !== null) {
       this.dataService.updateMenuItem({
         id: this.editingId,
-        ...itemData,
-      });
+        ...productData,
+      } as Product);
     }
     this.closeModal();
   }
 
-  toggleAvailability(item: MenuItem): void {
+  toggleAvailability(item: Product): void {
     this.dataService.updateMenuItem({
       ...item,
-      available: !item.available,
+      isActive: !item.isActive,
     });
   }
 
-  deleteItem(item: MenuItem): void {
+  deleteItem(item: Product): void {
     this.itemToDelete.set(item);
     this.showDeleteModal.set(true);
   }
@@ -182,7 +219,9 @@ export class MenuComponent implements OnInit {
   confirmDelete(): void {
     const item = this.itemToDelete();
     if (item) {
-      this.dataService.deleteMenuItem(item.id);
+      // Convertir id a número si es necesario (para el mock)
+      const id = item.id;
+      this.dataService.deleteMenuItem(id);
       this.showDeleteModal.set(false);
       this.itemToDelete.set(null);
     }
@@ -204,14 +243,14 @@ export class MenuComponent implements OnInit {
 
   cancelEditRate(): void {
     const exchangeRate = this.dataService.exchangeRate();
-    this.usdRate.set(exchangeRate.usd.toString());
-    this.eurRate.set(exchangeRate.eur.toString());
+    this.usdRate.set(exchangeRate.usdToCup.toString());
+    this.eurRate.set(exchangeRate.eurToCup.toString());
     this.isEditingRate.set(false);
   }
 
   ngOnInit(): void {
     const exchangeRate = this.dataService.exchangeRate();
-    this.usdRate.set(exchangeRate.usd.toString());
-    this.eurRate.set(exchangeRate.eur.toString());
+    this.usdRate.set(exchangeRate.usdToCup.toString());
+    this.eurRate.set(exchangeRate.eurToCup.toString());
   }
 }

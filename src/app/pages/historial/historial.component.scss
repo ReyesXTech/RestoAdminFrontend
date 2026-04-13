@@ -238,7 +238,6 @@
     border-collapse: collapse;
 
     thead {
-      background-color: color(gray-50);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -252,10 +251,6 @@
         letter-spacing: 0.1em;
         text-align: left;
         border-bottom: 1px solid color(gray-200);
-
-        &:last-child {
-          text-align: right;
-        }
       }
     }
 
@@ -265,13 +260,15 @@
         cursor: pointer;
         @include transition(all, 150ms);
 
-        // Pending orders - white background
+        // Pending orders
         &.pending {
-          background-color: color(amber-100);
-
           .client-name,
           .total {
             color: color(gray-900);
+          }
+
+          &:hover {
+            border-left-color: color(amber-500);
           }
 
           :host-context([data-theme='dark']) & {
@@ -285,13 +282,15 @@
           }
         }
 
-        // Ready orders - greenish background
+        // Ready orders
         &.ready {
-          background-color: color(emerald-100);
-
           .client-name,
           .total {
             color: color(emerald-900);
+          }
+
+          &:hover {
+            border-left-color: color(emerald-500);
           }
 
           :host-context([data-theme='dark']) & {
@@ -305,13 +304,15 @@
           }
         }
 
-        // Cancelled orders - reddish background
+        // Cancelled orders
         &.cancelled {
-          background-color: color(red-100);
-
           .client-name,
           .total {
             color: color(red-900);
+          }
+
+          &:hover {
+            border-left-color: color(red-500);
           }
 
           :host-context([data-theme='dark']) & {

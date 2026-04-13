@@ -141,7 +141,7 @@
                     <span class="no-phone">N/A</span>
                   }
                 </td>
-                <td>{{ order.orderTime | date: 'shortTime' }}</td>
+                <td>{{ order.orderTimeUtc | date: 'shortTime' }}</td>
                 <td
                   class="total"
                   [class.total-cancelled]="order.status === 'cancelado'"

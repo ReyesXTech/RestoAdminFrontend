@@ -1,20 +1,11 @@
-// ==========================================
-// AUTH SERVICE
-// ==========================================
-// Servicio para gestión de autenticación
-// Endpoints relacionados:
-// - POST /api/auth/login
-// - POST /api/auth/logout
-
 import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { User } from '../models/models';
+import { User, UserRole } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private router = inject(Router);
 
-  // Estado de autenticación
   private _isLoggedIn = signal<boolean>(
     typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') === 'true' : false,
   );
@@ -24,72 +15,54 @@ export class AuthService {
   readonly currentUser = this._currentUser.asReadonly();
 
   constructor() {
-    // Cargar usuario desde localStorage (MOCK)
-    // FUTURO: Esto se manejará con tokens JWT
     if (typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true') {
       const user = localStorage.getItem('user');
-      if (user) {
-        this._currentUser.set(JSON.parse(user));
-      }
+      if (user) this._currentUser.set(JSON.parse(user));
     }
   }
 
   /**
-   * Inicia sesión con email y contraseña
-   * MOCK: Reemplazar con llamada HTTP POST /api/auth/login
+   * Login con fullName y password (MOCK)
+   * FUTURO: POST /api/auth/login
    */
-  login(email: string, pass: string): boolean {
-    // MOCK: Reemplazar con:
-    // return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, { email, password: pass });
-
-    if (email === 'admin@resto.com' && pass === 'admin123') {
+  login(fullName: string, password: string): boolean {
+    // MOCK: usuarios de prueba (sin email)
+    if (fullName === 'Admin User' && password === 'admin123') {
       this._isLoggedIn.set(true);
-      this._currentUser.set({
-        id: 1,
-        name: 'Admin User',
+      const user: User = {
+        id: '1',
         fullName: 'Admin User',
-        role: 'admin',
+        role: UserRole.Admin,
         phone: '5550001',
-        email: 'admin@resto.com',
-      });
+        isActive: true,
+      };
+      this._currentUser.set(user);
       this.persistAuth();
       return true;
     }
-
-    if (email === 'empleado@resto.com' && pass === 'user123') {
+    if (fullName === 'Empleado 1' && password === 'user123') {
       this._isLoggedIn.set(true);
-      this._currentUser.set({
-        id: 2,
-        name: 'Empleado 1',
+      const user: User = {
+        id: '2',
         fullName: 'Empleado 1',
-        role: 'normal',
+        role: UserRole.Operator,
         phone: '5550002',
-        email: 'empleado@resto.com',
-      });
+        isActive: true,
+      };
+      this._currentUser.set(user);
       this.persistAuth();
       return true;
     }
-
     return false;
   }
 
-  /**
-   * Cierra la sesión actual
-   * MOCK: Reemplazar con llamada HTTP POST /api/auth/logout
-   */
   logout(): void {
-    // MOCK: Reemplazar con:
-    // this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe(() => { ... });
-
     this._isLoggedIn.set(false);
     this._currentUser.set(null);
     this.clearAuth();
     this.router.navigate(['/login']);
   }
 
-  /**
-   * Persiste el estado de autenticación en localStorage
-   */
   private persistAuth(): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('isLoggedIn', 'true');
@@ -97,9 +70,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Limpia el estado de autenticación
-   */
   private clearAuth(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isLoggedIn');

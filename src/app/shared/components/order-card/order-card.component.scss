@@ -3,374 +3,336 @@
 
 .order-card {
   background: var(--surface-bg);
-  border-radius: 1.5rem;
-  padding: 1.25rem;
+  border-radius: 1.25rem;
   margin-bottom: 1rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
   cursor: pointer;
-  @include transition(all, 150ms);
-
-  // Persistent border colors based on order type
-  &.order-pendientes {
-    border-color: color(amber-400);
-  }
-
-  &.order-listos {
-    border-color: color(emerald-400);
-  }
+  border: 1px solid var(--border-light);
+  position: relative;
+  overflow: visible;
 
   &:hover {
-    box-shadow: var(--shadow-md);
+    box-shadow:
+      0 12px 24px -4px rgba(0, 0, 0, 0.12),
+      0 4px 8px -2px rgba(0, 0, 0, 0.05);
+    border-color: var(--border-color); // opcional, para dar más énfasis
   }
 
+  // Status border accent
+  &.order-pendientes {
+    border-left: 4px solid #f59e0b; // amber-500
+  }
+  &.order-listos {
+    border-left: 4px solid #10b981; // emerald-500
+  }
+
+  // Urgent indicator
   &.urgent {
-    border-color: color(red-200);
+    background: linear-gradient(145deg, var(--surface-bg), rgba(239, 68, 68, 0.05));
   }
 }
 
-// Quick Preview Panel - Hidden by default
+// Quick Preview Panel (hidden by default, appears on hover)
 .quick-preview {
   display: none;
-  background-color: var(--surface-muted);
-  border-radius: 0.75rem;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 260px;
+  background: var(--surface-muted);
+  border-radius: 1rem;
   padding: 0.875rem;
-  margin-bottom: 1rem;
   border: 1px solid var(--border-light);
-
-  // Animation for smooth appearance
-  opacity: 0;
-  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  backdrop-filter: blur(8px);
   transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+    opacity 0.2s,
+    transform 0.2s;
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
 
   .preview-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.625rem;
-
+    margin-bottom: 0.75rem;
     .preview-title {
-      font-size: 0.6875rem;
-      font-weight: 700;
-      color: var(--text-secondary);
+      font-size: 0.7rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
     }
-
     .preview-icon {
-      width: 0.875rem;
-      height: 0.875rem;
+      width: 0.9rem;
+      height: 0.9rem;
       color: var(--text-secondary);
     }
   }
-
   .preview-items {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    margin-bottom: 0.75rem;
-    max-height: 150px;
+    max-height: 160px;
     overflow-y: auto;
+    margin-bottom: 0.75rem;
     @include custom-scrollbar;
-
     .preview-item {
       display: flex;
-      align-items: center;
       gap: 0.5rem;
-      font-size: 0.8125rem;
-
+      font-size: 0.8rem;
+      padding: 0.25rem 0;
       .preview-item-qty {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 1.75rem;
-        padding: 0.125rem 0.375rem;
-        background-color: color(indigo-50);
-        color: color(indigo-700);
-        font-size: 0.75rem;
         font-weight: 700;
-        border-radius: 0.25rem;
+        min-width: 2rem;
+        color: var(--text-primary);
       }
-
       .preview-item-name {
         color: var(--text-secondary);
-        font-weight: 500;
-        @include line-clamp(1);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
-
   .preview-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 0.5rem;
     border-top: 1px solid var(--border-light);
-
+    padding-top: 0.5rem;
     .preview-total-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      color: var(--text-secondary);
       text-transform: uppercase;
+      color: var(--text-secondary);
     }
-
     .preview-total-amount {
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--text-primary);
     }
   }
 }
 
-// Show quick preview on hover ONLY when preview-enabled class is present
 .order-card.preview-enabled:hover .quick-preview {
   display: block;
   opacity: 1;
-  transform: translateY(0);
+  transform: scale(1);
+  pointer-events: none; // avoid interfering with card click
 }
 
-// Order Header
+// Main content area
+.order-main {
+  padding: 1rem 1.25rem 1rem 1.25rem;
+}
+
 .order-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
 
-  .order-info {
-    .order-client-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      .order-client {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        @include transition(color, 150ms);
-      }
-
-      .urgent-badge {
-        background-color: color(red-500);
-        color: color(white);
-        font-size: 0.625rem;
-        font-weight: 700;
-        padding: 0.125rem 0.5rem;
-        border-radius: 9999px;
-        @include animate-pulse;
-      }
-    }
-
-    .order-address {
-      font-size: 0.75rem;
-      color: color(gray-400);
-      @include line-clamp(1);
-      margin-bottom: 0.5rem;
-    }
-
-    .order-phone {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      padding: 0.375rem 0.625rem;
-      border-radius: 0.5rem;
-      background-color: var(--surface-muted);
-      color: var(--text-primary);
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      letter-spacing: 0.02em;
-      @include transition(all, 150ms);
-
-      &:hover {
-        background-color: var(--border-color);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .phone-icon {
-        width: 0.875rem;
-        height: 0.875rem;
-      }
-
-      .copy-icon {
-        width: 0.875rem;
-        height: 0.875rem;
-        opacity: 0.7;
-      }
-    }
+.order-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  .order-client {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
   }
+  .urgent-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+    letter-spacing: 0.3px;
+  }
+}
 
-  .action-buttons {
+// ... (resto de estilos sin cambios)
+
+.order-actions {
+  display: flex;
+  gap: 0.5rem;
+
+  .action-btn {
+    position: relative;
+    border: none;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 2rem;
     display: flex;
-    gap: 0.75rem;
-    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
 
-    .action-btn-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .action-icon {
+      width: 1.2rem;
+      height: 1.2rem;
+    }
 
-      &:hover .action-tooltip {
+    // Eliminamos los estilos de .action-tooltip que estaban aquí
+
+    &.mark-ready {
+      background: #10b981;
+      color: white;
+      &:hover {
+        background: #059669;
+      }
+    }
+    &.restore {
+      background: #f59e0b;
+      color: white;
+      &:hover {
+        background: #d97706;
+      }
+    }
+    &.cancel {
+      background: #ef4444;
+      color: white;
+      &:hover {
+        background: #dc2626;
+      }
+    }
+  }
+}
+
+.action-tooltip-fixed {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: #1f2937;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+  z-index: 9999; // Asegura que esté por encima de todo
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1f2937;
+  }
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// Modo oscuro (si es necesario)
+[data-theme='dark'] {
+  .action-tooltip-fixed {
+    background: #374151;
+    &::after {
+      border-top-color: #374151;
+    }
+  }
+}
+
+.order-details {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  .order-address,
+  .order-phone {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    .detail-icon {
+      width: 1rem;
+      height: 1rem;
+      stroke-width: 1.5;
+      flex-shrink: 0;
+    }
+  }
+  .order-phone {
+    background: var(--surface-muted);
+    padding: 0.3rem 0.7rem;
+    border-radius: 2rem;
+    width: fit-content;
+    cursor: pointer;
+    transition: background 0.15s;
+    &:hover {
+      background: var(--border-light);
+      .copy-icon {
         opacity: 1;
-        transform: translate(8px, -40px);
-        visibility: visible;
       }
     }
-
-    .action-btn {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      @include transition(all, 150ms);
-      cursor: pointer;
-
-      &.mark-ready {
-        background-color: color(emerald-500);
-        color: color(white);
-
-        &:hover {
-          background-color: color(emerald-600);
-        }
-      }
-
-      &.restore {
-        background-color: color(amber-500);
-        color: color(white);
-
-        &:hover {
-          background-color: color(amber-600);
-        }
-      }
-
-      &.cancel {
-        background-color: color(red-500);
-        color: color(white);
-
-        &:hover {
-          background-color: color(red-600);
-        }
-      }
-
-      .action-icon {
-        width: 1.25rem;
-        height: 1.25rem;
-      }
-    }
-
-    .action-tooltip {
-      position: fixed;
-      bottom: auto;
-      left: auto;
-      transform: translate(-20px, -30px);
-      background-color: color(gray-800);
-      color: color(white);
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem;
-      white-space: nowrap;
-      opacity: 0;
-      visibility: hidden;
-      @include transition(all, 150ms);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      z-index: 10000;
-      pointer-events: none;
-
-      [data-theme='dark'] & {
-        background-color: color(gray-700);
-        color: color(white);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      }
-
-      &::after {
-        content: '';
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 5px solid transparent;
-        border-top-color: color(gray-800);
-
-        [data-theme='dark'] & {
-          border-top-color: color(gray-700);
-        }
-      }
+    .copy-icon {
+      width: 0.9rem;
+      height: 0.9rem;
+      margin-left: 0.25rem;
+      opacity: 0.6;
+      transition: opacity 0.15s;
     }
   }
 }
 
-// Hover effects for order cards based on type
-// Border color intensifies on hover (always)
-.order-card.order-pendientes:hover {
-  border-color: color(amber-500);
-}
-
-.order-card.order-listos:hover {
-  border-color: color(emerald-500);
-}
-
-// Quick preview styling on hover (only when preview is enabled)
-.order-card.order-pendientes.preview-enabled:hover .quick-preview {
-  border-color: color(amber-300);
-
-  .preview-items {
-    .preview-item {
-      .preview-item-qty {
-        background-color: color(amber-50);
-        color: color(amber-700);
-      }
-    }
-  }
-}
-
-.order-card.order-listos.preview-enabled:hover .quick-preview {
-  border-color: color(emerald-300);
-
-  .preview-items {
-    .preview-item {
-      .preview-item-qty {
-        background-color: color(emerald-50);
-        color: color(emerald-700);
-      }
-    }
-  }
-}
-
-// Order Footer
 .order-footer {
   .delivery-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.625rem 0.875rem;
-    background-color: var(--surface-muted);
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-light);
-
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border-light);
     .label {
-      font-size: 0.6875rem;
-      font-weight: 700;
-      color: var(--text-secondary);
+      font-size: 0.7rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: var(--text-secondary);
     }
-
     .value {
-      font-size: 0.8125rem;
-      font-weight: 700;
+      font-size: 0.85rem;
+      font-weight: 600;
       color: var(--text-primary);
-
       &.urgent {
-        color: color(red-500);
-        font-weight: 700;
+        color: #ef4444;
       }
+    }
+  }
+}
+
+// Dark mode adjustments (keep original colors, just ensure variables work)
+[data-theme='dark'] {
+  .order-card {
+    background: var(--surface-bg);
+    border-color: var(--border-light);
+    &.urgent {
+      background: linear-gradient(145deg, var(--surface-bg), rgba(239, 68, 68, 0.1));
+    }
+  }
+  .quick-preview {
+    background: rgba(30, 41, 59, 0.9);
+    backdrop-filter: blur(12px);
+  }
+  .action-tooltip {
+    background: #374151;
+    &::after {
+      border-top-color: #374151;
     }
   }
 }

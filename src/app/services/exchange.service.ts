@@ -13,9 +13,9 @@ import { ExchangeRate } from '../models/models';
 export class ExchangeService {
   // Estado de tasas de cambio
   private _exchangeRate = signal<ExchangeRate>({
-    usd: 280,
-    eur: 300,
-    lastUpdated: new Date().toISOString(),
+    usdToCup: 280,
+    eurToCup: 300,
+    lastUpdatedUtc: new Date().toISOString(),
   });
 
   readonly exchangeRate = this._exchangeRate.asReadonly();
@@ -30,14 +30,14 @@ export class ExchangeService {
    * Actualiza las tasas de cambio
    * MOCK: Reemplazar con llamada HTTP PUT /api/exchange-rates
    */
-  updateExchangeRate(usd: number, eur: number): void {
+  updateExchangeRate(usdToCup: number, eurToCup: number): void {
     // FUTURO:
     // return this.http.put(`${this.apiUrl}/exchange-rates`, { usd, eur });
 
     this._exchangeRate.set({
-      usd,
-      eur,
-      lastUpdated: new Date().toISOString(),
+      usdToCup,
+      eurToCup,
+      lastUpdatedUtc: new Date().toISOString(),
     });
     this.persistExchangeRate();
   }
@@ -73,7 +73,7 @@ export class ExchangeService {
    * Obtiene el valor de una moneda específica
    */
   getRate(currency: 'usd' | 'eur'): number {
-    return currency === 'usd' ? this._exchangeRate().usd : this._exchangeRate().eur;
+    return currency === 'usd' ? this._exchangeRate().usdToCup : this._exchangeRate().eurToCup;
   }
 
   /**

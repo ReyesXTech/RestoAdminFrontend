@@ -6,10 +6,10 @@
   [class.order-pendientes]="orderType() === 'pendientes'"
   [class.order-listos]="orderType() === 'listos'"
 >
-  <!-- Quick Preview Panel - Always rendered, shown via CSS when previewEnabled + hover -->
+  <!-- Quick Preview Panel -->
   <div class="quick-preview">
     <div class="preview-header">
-      <span class="preview-title">Vista Rápida</span>
+      <span class="preview-title">Vista rápida</span>
       <svg
         class="preview-icon"
         viewBox="0 0 24 24"
@@ -17,111 +17,74 @@
         stroke="currentColor"
         stroke-width="2"
       >
-        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         <path
           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-        ></path>
+        />
       </svg>
     </div>
     <div class="preview-items">
-      @for (item of order().items; track item.name) {
+      @for (item of order().items; track item.productId) {
         <div class="preview-item">
           <span class="preview-item-qty">{{ item.quantity }}x</span>
-          <span class="preview-item-name">{{ item.name }}</span>
+          <span class="preview-item-name">{{ item.productName }}</span>
         </div>
       }
     </div>
     <div class="preview-total">
-      <span class="preview-total-label">Total:</span>
+      <span class="preview-total-label">Total</span>
       <span class="preview-total-amount">{{ order().total | currency }}</span>
     </div>
   </div>
 
-  <div class="order-header">
-    <div class="order-info">
-      <div class="order-client-wrapper">
+  <div class="order-main">
+    <div class="order-header">
+      <div class="order-identity">
         <h3 class="order-client">{{ order().clientName }}</h3>
         @if (isUrgent) {
-          <span class="urgent-badge">URGENTE</span>
+          <span class="urgent-badge">Urgente</span>
         }
       </div>
-      <p class="order-address">{{ order().address }}</p>
-      @if (order().phone) {
-        <span
-          class="order-phone"
-          (click)="$event.stopPropagation(); copyPhone(order().phone!)"
-          title="Click para copiar"
-        >
-          <svg
-            class="phone-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
-            />
-          </svg>
-          {{ order().phone }}
-          <svg
-            class="copy-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        </span>
-      }
-    </div>
-
-    @if (showActions()) {
-      <div class="action-buttons">
-        <!-- Mark as Ready / Restore button -->
-        @if (order().status === 'pendiente') {
-          <div class="action-btn-wrapper">
+      <div class="order-actions">
+        @if (showActions()) {
+          @if (order().status === 'pendiente') {
             <button
               (click)="$event.stopPropagation(); onMarkReady()"
               class="action-btn mark-ready"
               aria-label="Marcar como listo"
+              (mouseenter)="showActionTooltip($event, 'ready')"
+              (mouseleave)="hideActionTooltip()"
             >
               <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
               </svg>
             </button>
-            <span class="action-tooltip">Marcar como listo</span>
-          </div>
-        } @else if (order().status === 'listo') {
-          <div class="action-btn-wrapper">
+          } @else if (order().status === 'listo') {
             <button
               (click)="$event.stopPropagation(); onRestoreToPending()"
               class="action-btn restore"
               aria-label="Restaurar a pendientes"
+              (mouseenter)="showActionTooltip($event, 'restore')"
+              (mouseleave)="hideActionTooltip()"
             >
               <svg
                 class="action-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="3"
+                stroke-width="2.5"
               >
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                <path d="M3 3v5h5"></path>
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
               </svg>
             </button>
-            <span class="action-tooltip">Restaurar a pendientes</span>
-          </div>
-        }
-
-        <!-- Cancel button -->
-        <div class="action-btn-wrapper">
+          }
           <button
             (click)="$event.stopPropagation(); onCancelOrder()"
             class="action-btn cancel"
             aria-label="Cancelar pedido"
+            (mouseenter)="showActionTooltip($event, 'cancel')"
+            (mouseleave)="hideActionTooltip()"
           >
             <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -129,18 +92,81 @@
               />
             </svg>
           </button>
-          <span class="action-tooltip">Cancelar pedido</span>
-        </div>
+        }
       </div>
-    }
-  </div>
+    </div>
 
-  <div class="order-footer">
-    <div class="delivery-info">
-      <span class="label">Entrega</span>
-      <span class="value" [class.urgent]="order().desiredDeliveryTime === 'inmediatamente'">
-        {{ order().desiredDeliveryTime }}
-      </span>
+    <div class="order-details">
+      <div class="order-address">
+        <svg
+          class="detail-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+          <circle cx="12" cy="9" r="2.5" />
+        </svg>
+        <span>{{ getAddressDisplay() }}</span>
+      </div>
+      @if (order().phone) {
+        <div
+          class="order-phone"
+          (click)="$event.stopPropagation(); copyPhone(order().phone!)"
+          title="Copiar teléfono"
+        >
+          <svg
+            class="detail-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+            />
+          </svg>
+          <span>{{ order().phone }}</span>
+          <svg
+            class="copy-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </div>
+      }
+    </div>
+
+    <div class="order-footer">
+      <div class="delivery-info">
+        <span class="label">Entrega</span>
+        <span class="value" [class.urgent]="isUrgent">
+          {{ getDeliveryTimeDisplay() }}
+        </span>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Tooltip fijo dinámico -->
+@if (activeTooltip(); as tooltip) {
+  <div
+    class="action-tooltip-fixed"
+    [style.left.px]="tooltipPosition().x"
+    [style.top.px]="tooltipPosition().y"
+    [class.visible]="true"
+  >
+    @if (tooltip === 'ready') {
+      Listo
+    } @else if (tooltip === 'restore') {
+      Restaurar
+    } @else if (tooltip === 'cancel') {
+      Cancelar
+    }
+  </div>
+}

@@ -56,7 +56,7 @@ export class HistorialComponent implements OnDestroy {
     today.setHours(23, 59, 59, 999);
 
     // Filter to include orders up to and including today
-    orders = orders.filter((o) => new Date(o.orderTime) <= today);
+    orders = orders.filter((o) => new Date(o.orderTimeUtc) <= today);
 
     if (this.searchTerm()) {
       const term = this.searchTerm().toLowerCase();
@@ -70,13 +70,13 @@ export class HistorialComponent implements OnDestroy {
     if (this.searchStartDate()) {
       const startDate = new Date(this.searchStartDate());
       startDate.setHours(0, 0, 0, 0);
-      orders = orders.filter((o) => new Date(o.orderTime) >= startDate);
+      orders = orders.filter((o) => new Date(o.orderTimeUtc) >= startDate);
     }
 
     if (this.searchEndDate()) {
       const endDate = new Date(this.searchEndDate());
       endDate.setHours(23, 59, 59, 999);
-      orders = orders.filter((o) => new Date(o.orderTime) <= endDate);
+      orders = orders.filter((o) => new Date(o.orderTimeUtc) <= endDate);
     }
 
     return orders;
@@ -87,7 +87,7 @@ export class HistorialComponent implements OnDestroy {
     const groups: { date: string; orders: any[]; count: number }[] = [];
 
     orders.forEach((order) => {
-      const date = new Date(order.orderTime).toLocaleDateString('es-ES', {
+      const date = new Date(order.orderTimeUtc).toLocaleDateString('es-ES', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',

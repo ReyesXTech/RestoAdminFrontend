@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
-import { User } from '../../models/models';
+import { User, UserRole } from '../../models/models';
 
 @Component({
   selector: 'app-usuarios',
@@ -12,11 +12,16 @@ import { User } from '../../models/models';
   styleUrls: ['./usuarios.component.scss'],
 })
 export class UsuariosComponent {
+  // Exponer el enum para usarlo en la plantilla HTML
+  readonly UserRole = UserRole;
+
   private dataService = inject(DataService);
 
   readonly users = this.dataService.users;
   readonly currentUser = this.dataService.currentUser;
-  readonly roles: User['role'][] = ['admin', 'normal'];
+
+  // CORREGIDO: usar el enum correctamente
+  readonly roles: UserRole[] = [UserRole.Admin, UserRole.Operator];
 
   // Delete confirmation modal
   showDeleteModal = signal(false);
@@ -24,29 +29,34 @@ export class UsuariosComponent {
 
   showModal = false;
   modalMode: 'add' | 'edit' = 'add';
-  editingId: number | null = null;
+
+  // CORREGIDO: permitir string | number | null
+  editingId: string | number | null = null;
+
   formName = '';
   formPhone = '';
-  formEmail = '';
-  formRole: User['role'] = 'normal';
+
+  // CORREGIDO: usar el tipo UserRole directamente
+  formRole: UserRole = UserRole.Operator;
 
   openAddModal(): void {
     this.formName = '';
     this.formPhone = '';
-    this.formEmail = '';
-    this.formRole = 'normal';
+    // this.formEmail = '';  // eliminado
+    this.formRole = UserRole.Operator; // CORREGIDO
     this.showModal = true;
     this.editingId = null;
     this.modalMode = 'add';
   }
 
-  // Add editUser method to open the edit modal
   openEditModal(user: User): void {
     this.formName = user.fullName;
-    this.formPhone = user.phone;
-    this.formEmail = user.email;
+    // CORREGIDO: manejar phone opcional
+    this.formPhone = user.phone || '';
+    // ELIMINADO: this.formEmail = user.email;
     this.formRole = user.role;
     this.showModal = true;
+    // CORREGIDO: permitir cualquier tipo de id
     this.editingId = user.id;
     this.modalMode = 'edit';
   }
@@ -55,7 +65,6 @@ export class UsuariosComponent {
     this.showModal = false;
   }
 
-  // Update saveUser to handle editing existing users
   saveUser(): void {
     if (!this.formName.trim() || !this.formPhone.trim()) return;
 
@@ -63,7 +72,6 @@ export class UsuariosComponent {
       name: this.formName,
       fullName: this.formName,
       phone: this.formPhone,
-      email: this.formEmail,
       role: this.formRole,
     };
 
@@ -81,7 +89,7 @@ export class UsuariosComponent {
 
   deleteUser(user: User): void {
     const current = this.dataService.currentUser();
-    if (current?.role !== 'admin') {
+    if (current?.role !== UserRole.Admin) {
       return;
     }
     this.userToDelete.set(user);
@@ -102,10 +110,10 @@ export class UsuariosComponent {
     this.userToDelete.set(null);
   }
 
-  roleBadgeClass(role: User['role']): string {
-    const map: Record<User['role'], string> = {
-      admin: 'bg-purple-100 text-purple-700 border border-purple-300',
-      normal: 'bg-blue-100 text-blue-700 border border-blue-300',
+  roleBadgeClass(role: UserRole): string {
+    const map: Record<UserRole, string> = {
+      [UserRole.Admin]: 'bg-purple-100 text-purple-700 border border-purple-300',
+      [UserRole.Operator]: 'bg-blue-100 text-blue-700 border border-blue-300',
     };
     return map[role];
   }

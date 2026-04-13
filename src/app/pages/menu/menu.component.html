@@ -22,11 +22,11 @@
           </div>
           <div class="exchange-rates">
             <span class="exchange-label">USD</span>
-            <span class="exchange-value">${{ exchangeRate().usd }}</span>
+            <span class="exchange-value">${{ exchangeRate().usdToCup }}</span>
           </div>
           <div class="exchange-rates">
             <span class="exchange-label">EUR</span>
-            <span class="exchange-value">${{ exchangeRate().eur }}</span>
+            <span class="exchange-value">${{ exchangeRate().eurToCup }}</span>
           </div>
           <button (click)="isEditingRate.set(true)" class="edit-btn" title="Editar tasas">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -40,11 +40,11 @@
         <div class="exchange-inputs">
           <div class="input-group">
             <label>USD</label>
-            <input [(ngModel)]="usdRate" type="number" min="0" step="0.01" />
+            <input [(ngModel)]="usdRate" type="number" min="0" step="1" />
           </div>
           <div class="input-group">
             <label>EUR</label>
-            <input [(ngModel)]="eurRate" type="number" min="0" step="0.01" />
+            <input [(ngModel)]="eurRate" type="number" min="0" step="1" />
           </div>
           <button (click)="saveExchangeRate()" class="action-btn save" title="Guardar">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -141,22 +141,28 @@
             </td>
             <td>
               <div class="product-name">{{ item.name }}</div>
+
               <div class="product-ingredients">
-                Ingredientes: <span>{{ item.ingredients || 'No especificados' }}</span>
+                Ingredientes: <span>{{ item.detailedDescription || 'No especificados' }}</span>
               </div>
             </td>
+
             <td>
-              <span class="category-badge">{{ item.category }}</span>
+              <span class="category-badge">{{ getCategoryName(item.category) }}</span>
             </td>
-            <td class="price">${{ item.price.toFixed(2) }}</td>
+
+            <td class="price">
+              {{ item.price.amount | currency: item.price.currency }}
+            </td>
+
             <td>
               <button
                 (click)="$event.stopPropagation(); toggleAvailability(item)"
                 class="status-badge"
-                [class.active]="item.available"
-                [class.inactive]="!item.available"
+                [class.active]="item.isActive"
+                [class.inactive]="!item.isActive"
               >
-                {{ item.available ? 'ACTIVO' : 'AGOTADO' }}
+                {{ item.isActive ? 'ACTIVO' : 'AGOTADO' }}
               </button>
             </td>
             <td>
@@ -165,6 +171,8 @@
                   <button
                     (click)="$event.stopPropagation(); openEditModal(item)"
                     class="action-btn edit"
+                    (mouseenter)="showActionTooltip($event, 'edit')"
+                    (mouseleave)="hideActionTooltip()"
                   >
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                       <path
@@ -172,12 +180,13 @@
                       />
                     </svg>
                   </button>
-                  <span class="action-tooltip">Editar</span>
                 </div>
                 <div class="action-btn-wrapper">
                   <button
                     (click)="$event.stopPropagation(); deleteItem(item)"
                     class="action-btn delete"
+                    (mouseenter)="showActionTooltip($event, 'delete')"
+                    (mouseleave)="hideActionTooltip()"
                   >
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                       <path
@@ -185,7 +194,6 @@
                       />
                     </svg>
                   </button>
-                  <span class="action-tooltip">Eliminar</span>
                 </div>
               </div>
             </td>
@@ -236,7 +244,7 @@
         <div class="form-group">
           <label>Ingredientes</label>
           <input
-            [(ngModel)]="formIngredients"
+            [(ngModel)]="formDescription"
             name="ingredients"
             type="text"
             placeholder="Ej: Tomate, Queso, Albahaca"
@@ -275,13 +283,13 @@
             </div>
             <div>
               <label>Precio ($)</label>
-              <input [(ngModel)]="formPrice" name="price" type="number" min="0" step="0.01" />
+              <input [(ngModel)]="formPriceAmount" name="price" type="number" min="0" step="1" />
             </div>
           </div>
         </div>
 
         <div class="checkbox-group">
-          <input [(ngModel)]="formAvailable" name="available" type="checkbox" id="available" />
+          <input [(ngModel)]="formIsActive" name="available" type="checkbox" id="available" />
           <label for="available">Disponible para la venta</label>
         </div>
       </div>
@@ -329,5 +337,17 @@
         </button>
       </div>
     </div>
+  </div>
+}
+
+<!-- Tooltip fijo para acciones de tabla -->
+@if (activeActionTooltip(); as tooltip) {
+  <div
+    class="action-tooltip-fixed"
+    [style.left.px]="actionTooltipPosition().x"
+    [style.top.px]="actionTooltipPosition().y"
+    [class.visible]="true"
+  >
+    {{ tooltip === 'edit' ? 'Editar' : 'Eliminar' }}
   </div>
 }

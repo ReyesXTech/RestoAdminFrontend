@@ -117,7 +117,7 @@
   @if (selectedOrder()) {
     <app-pending-ready-order-detail-modal
       [order]="selectedOrder()"
-      [isUrgent]="selectedOrder()!.desiredDeliveryTime | isUrgent: currentTime()"
+      [isUrgent]="selectedOrder()!.desiredDeliveryTimeUtc | isUrgent: currentTime()"
       (close)="closeDetail()"
     />
   }
