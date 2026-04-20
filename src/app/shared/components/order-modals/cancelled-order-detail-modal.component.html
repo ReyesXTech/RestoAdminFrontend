@@ -41,7 +41,7 @@
           <div class="delivery-info-card">
             <div class="info-item">
               <span class="label">Entrega Deseada</span>
-              <span class="value">{{ order()!.desiredDeliveryTimeUtc }}</span>
+              <span class="value">{{ formatTime(order()!.desiredDeliveryTimeUtc) }}</span>
             </div>
             <div class="info-item">
               <span class="label">Teléfono</span>
@@ -61,16 +61,16 @@
         <div class="info-section">
           <h3 class="section-title">Resumen del Pedido</h3>
           <div class="order-items-list">
-            @for (item of order()!.items; track item.name) {
+            @for (item of order()!.items; track item.productId) {
               <div class="order-item-row">
                 <div class="item-info">
                   <span class="item-quantity item-quantity-cancelled">{{ item.quantity }}x</span>
                   <span class="item-name" [class.item-name-cancelled]="showStrikethrough()">{{
-                    item.name
+                    item.productName
                   }}</span>
                 </div>
                 <span class="item-subtotal" [class.item-subtotal-cancelled]="showStrikethrough()">{{
-                  item.unitPrice * item.quantity | currency
+                  item.subtotalAmount | currency
                 }}</span>
               </div>
             }
@@ -80,7 +80,7 @@
         <!-- Total -->
         <div class="total-section total-section-cancelled">
           <span class="total-label">TOTAL</span>
-          <span class="total-amount">{{ order()!.total | currency }}</span>
+          <span class="total-amount">{{ order()!.totalAmount | currency }}</span>
         </div>
 
         <!-- Actions -->

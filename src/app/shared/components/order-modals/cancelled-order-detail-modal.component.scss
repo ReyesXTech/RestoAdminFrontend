@@ -20,7 +20,9 @@
   width: 100%;
   max-width: 32rem;
   overflow: hidden;
-  box-shadow: var(--shadow-xl);
+  box-shadow:
+    0 0 0 1px #9ca3af,
+    var(--shadow-xl);
   animation: pop-in 0.2s ease-out;
 
   &.modal-fade-in {
@@ -30,7 +32,7 @@
 
 // Modal Header
 .modal-header {
-  background-color: color(red-600);
+  background-color: color(red-500);
   padding: 1.5rem;
   color: color(white);
   position: relative;
@@ -173,7 +175,6 @@
   }
 }
 
-// Order Items List
 .order-items-list {
   display: flex;
   flex-direction: column;
@@ -183,7 +184,7 @@
   .order-item-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
     padding: 0.625rem 0;
     border-bottom: 1px dashed var(--border-color);
 
@@ -193,19 +194,24 @@
 
     .item-info {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       gap: 0.625rem;
+      flex: 1;
 
       .item-quantity {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         min-width: 2rem;
-        padding: 0.25rem 0.5rem;
+        padding: 0.125rem 0.5rem;
         background-color: color(red-100);
         color: color(red-700);
         font-size: 0.8125rem;
         font-weight: 700;
         border-radius: 0.375rem;
         text-align: center;
+        flex-shrink: 0;
+        line-height: 1.5;
 
         &.item-quantity-cancelled {
           background-color: color(red-200);
@@ -214,9 +220,10 @@
       }
 
       .item-name {
-        font-size: 0.875rem;
-        color: color(gray-700);
+        font-size: 1rem;
+        color: var(--text-primary);
         font-weight: 500;
+        line-height: 1.5;
 
         &.item-name-cancelled {
           text-decoration: line-through;
@@ -226,9 +233,12 @@
     }
 
     .item-subtotal {
-      font-size: 0.875rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--text-primary);
+      line-height: 1.5;
+      flex-shrink: 0;
+      text-align: right;
 
       &.item-subtotal-cancelled {
         text-decoration: line-through;
@@ -332,4 +342,10 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+:host-context([data-theme='dark']) .modal-content {
+  box-shadow:
+    0 0 0 1px #334155,
+    var(--shadow-xl);
 }

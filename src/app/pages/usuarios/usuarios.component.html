@@ -43,9 +43,9 @@
               <span
                 class="role-badge"
                 [class.admin]="user.role === UserRole.Admin"
-                [class.operario]="user.role === 'operario'"
+                [class.operario]="user.role === UserRole.Operator"
               >
-                {{ user.role === 'operario' ? 'Operario' : 'Admin' }}
+                {{ user.role === UserRole.Operator ? 'Operario' : 'Admin' }}
               </span>
             </td>
             @if (currentUser()?.role === UserRole.Admin) {
@@ -90,7 +90,7 @@
   </div>
 </div>
 
-<!-- Add/Edit User Modal (sin email) -->
+<!-- Add/Edit User Modal -->
 @if (showModal) {
   <div class="modal-overlay" (click)="closeModal()">
     <div class="modal-content modal-fade-in" (click)="$event.stopPropagation()">
@@ -122,10 +122,23 @@
           <label>Rol de Usuario</label>
           <select [(ngModel)]="formRole" name="role">
             @for (role of roles; track role) {
-              <option [value]="role">{{ role | uppercase }}</option>
+              <option [value]="role">{{ role === UserRole.Admin ? 'Admin' : 'Operario' }}</option>
             }
           </select>
         </div>
+
+        <!-- Campo de contraseña solo en modo creación -->
+        @if (modalMode === 'add') {
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input
+              [(ngModel)]="formPassword"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+            />
+          </div>
+        }
       </div>
 
       <div class="modal-footer">

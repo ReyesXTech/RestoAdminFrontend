@@ -41,6 +41,39 @@
   border: 1px solid var(--border-color);
 }
 
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  margin: 1rem auto;
+  width: fit-content;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: var(--surface-muted);
+  border-radius: 2rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+
+  // ⏳ Retraso para evitar flicker
+  opacity: 0;
+  animation: delayed-appear 0.01s 0.25s forwards;
+
+  @keyframes delayed-appear {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--text-tertiary);
+  }
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -53,7 +86,7 @@ table {
     th {
       padding: 1rem 1.5rem;
       font-size: 0.625rem;
-      font-weight: 900;
+      font-weight: 800;
       color: color(red-400);
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -101,7 +134,7 @@ table {
           font-size: 0.8125rem;
           font-weight: 600;
           padding: 0.25rem 0.5rem;
-          border-radius: 0.375rem;
+          border-radius: 2rem;
           background-color: color(red-100);
           color: color(red-900);
           cursor: pointer;
@@ -113,7 +146,7 @@ table {
           }
 
           :host-context([data-theme='dark']) & {
-            background-color: color(red-800);
+            background-color: color(gray-600);
             color: color(red-50);
 
             &:hover {
@@ -157,14 +190,14 @@ table {
           color: color(red-900);
 
           :host-context([data-theme='dark']) & {
-            background-color: color(red-800);
+            background-color: color(red-400);
             color: color(red-50);
           }
         }
 
         .total {
-          font-size: 1rem;
-          font-weight: 900;
+          font-size: 0.85rem;
+          font-weight: 700;
           color: color(red-900);
 
           :host-context([data-theme='dark']) & {
@@ -289,5 +322,32 @@ table {
     table {
       min-width: 600px;
     }
+  }
+}
+
+// ==========================================
+// SUAVIZAR APARICIÓN DE LAS FILAS (evita flicker)
+// ==========================================
+
+// Solo aplicamos a filas que NO sean el estado vacío (no tienen colspan)
+.cancelados-content tbody tr:not([colspan]) {
+  animation: fade-in-up 0.25s ease-out forwards;
+  opacity: 0;
+
+  @for $i from 1 through 30 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.015}s;
+    }
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -1,11 +1,8 @@
 // ==========================================
 // JWT INTERCEPTOR
 // ==========================================
-// Este interceptor se encargará de añadir el token JWT
-// a todas las peticiones HTTP cuando se implemente el backend real.
-//
-// ESTADO ACTUAL: Solo pasa las peticiones sin modificar (mock mode)
-// PARA ACTIVAR: Descomentar la línea que añade el Authorization header
+// Añade automáticamente el token JWT a todas las peticiones salientes
+// cuando el usuario está autenticado.
 // ==========================================
 
 import { Injectable, inject } from '@angular/core';
@@ -14,67 +11,81 @@ import {
   HttpRequest,
   HttpHandler,
   HttpEvent,
-  HttpHandlerFn
+  HttpHandlerFn,
+  HttpErrorResponse,
 } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { DataService } from '../services/data.service';
+import { Observable, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 /**
  * Interceptor funcional para añadir token JWT a las peticiones
- * Se registra en app.config.ts
+ * Registrado en app.config.ts
  */
-export function jwtInterceptorFn(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
-  // const dataService = inject(DataService);
-  
-  // ==========================================
-  // MODO MOCK: No modificar las peticiones
-  // ==========================================
-  // Cuando se implemente el backend, descomentar esto:
-  // ------------------------------------------
-  // const currentUser = dataService.currentUser();
-  // const token = localStorage.getItem('authToken');
-  // 
-  // if (token && currentUser) {
-  //   req = req.clone({
-  //     setHeaders: {
-  //       Authorization: `Bearer ${token}`,
-  //       'Content-Type': 'application/json'
-  //     }
-  //   });
-  // }
-  // ------------------------------------------
-  
-  // Por ahora, solo pasar la petición sin modificar
+export function jwtInterceptorFn(
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+): Observable<HttpEvent<unknown>> {
+  // Inyectamos el AuthService directamente en el interceptor funcional
+  const authService = inject(AuthService);
+
+  const token = authService.getToken(); // Método que obtiene el token almacenado
+
+  // Si hay token, clonamos la petición y añadimos el header Authorization
+  if (token) {
+    req = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
   return next(req);
 }
 
 /**
- * Clase interceptor (alternativa funcional)
- * Se puede usar si se prefiere la sintaxis de clases
+ * Interceptor de clase (alternativa por si se prefiere usar clases)
+ * También se puede usar con HTTP_INTERCEPTORS en módulos tradicionales
  */
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
-  private dataService = inject(DataService);
-  
-  intercept(
-    req: HttpRequest<any>,
-    next: HttpHandler
-  ): Observable<HttpEvent<any>> {
-    // ==========================================
-    // MODO MOCK: No modificar las peticiones
-    // ==========================================
-    // Cuando se implemente el backend, descomentar esto:
-    // ------------------------------------------
-    // const token = localStorage.getItem('authToken');
-    // if (token) {
-    //   req = req.clone({
-    //     setHeaders: {
-    //       Authorization: `Bearer ${token}`
-    //     }
-    //   });
-    // }
-    // ------------------------------------------
-    
+  private authService = inject(AuthService);
+
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    const token = this.authService.getToken();
+
+    if (token) {
+      req = req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    }
+
     return next.handle(req);
   }
+}
+
+/**
+ * Interceptor de errores (opcional, ya lo tienes en otro archivo)
+ * Maneja errores 401 para redirigir al login automáticamente
+ */
+export function errorInterceptorFn(
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+): Observable<HttpEvent<unknown>> {
+  const router = inject(Router);
+
+  return next(req).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        // Token expirado o inválido: limpiar almacenamiento y redirigir
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        router.navigate(['/login']);
+      }
+      return throwError(() => error);
+    }),
+  );
 }

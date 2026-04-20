@@ -1,6 +1,7 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Order } from '../../../models/models';
+import { OrderDetailResponse, OrderStatus } from '../../../models';
+import { TimeService } from '../../../services/time.service';
 
 @Component({
   selector: 'app-cancelled-order-detail-modal',
@@ -10,14 +11,15 @@ import { Order } from '../../../models/models';
   styleUrls: ['./cancelled-order-detail-modal.component.scss'],
 })
 export class CancelledOrderDetailModalComponent {
-  // Inputs
-  order = input.required<Order | null>();
-  showStrikethrough = input<boolean>(false);
+  private timeService = inject(TimeService);
 
-  // Outputs
+  order = input.required<OrderDetailResponse | null>();
+  showStrikethrough = input<boolean>(false);
   close = output<void>();
 
-  getWhatsAppLink(order: Order): string {
+  readonly OrderStatus = OrderStatus;
+
+  getWhatsAppLink(order: OrderDetailResponse): string {
     const phone = order.phone || '';
     const message = encodeURIComponent(
       `Hola ${order.clientName}, vimos que tu pedido fue cancelado. ¿Podemos ayudarte con algo más?`,
@@ -26,7 +28,7 @@ export class CancelledOrderDetailModalComponent {
   }
 
   formatTime(dateString: string): string {
-    return new Date(dateString).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return this.timeService.formatTime(dateString);
   }
 
   onClose(): void {

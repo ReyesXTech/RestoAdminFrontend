@@ -1,14 +1,21 @@
 <div class="pedidos-container">
   <!-- Header -->
   <div class="pedidos-header">
-    <h1>
+    <div class="header-title-wrapper">
       <svg class="header-icon" viewBox="0 0 24 24" fill="currentColor">
         <path
           d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"
         />
       </svg>
-      Pedidos
-    </h1>
+      <h1>Pedidos</h1>
+    </div>
+
+    <button class="add-btn" (click)="openCreateModal()">
+      <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+      </svg>
+      <span>Nuevo pedido</span>
+    </button>
 
     <!-- View Mode Selector (Mobile Only) -->
     <div class="view-mode-selector mobile-only">
@@ -58,18 +65,21 @@
     <app-order-list
       type="pendientes"
       [orders]="pendientes()"
+      [loading]="dataService.pendingLoading()"
       [previewEnabled]="previewEnabled()"
       [currentTime]="currentTime()"
       [hidden]="viewMode() === 'listos'"
       (viewOrder)="viewOrder($event)"
       (markReady)="onMarkReady($event)"
       (cancelOrder)="onCancelOrder($event)"
+      (scrollEvent)="onListScroll($event, 'pendientes')"
     />
 
     <!-- List: Listos -->
     <app-order-list
       type="listos"
       [orders]="listos()"
+      [loading]="dataService.pendingLoading()"
       [previewEnabled]="previewEnabled()"
       [currentTime]="currentTime()"
       [hidden]="viewMode() === 'pendientes'"
@@ -77,6 +87,7 @@
       (markReady)="onMarkReady($event)"
       (cancelOrder)="onCancelOrder($event)"
       (restoreToPending)="onRestoreToPending($event)"
+      (scrollEvent)="onListScroll($event, 'listos')"
     />
   </div>
 
@@ -111,6 +122,11 @@
         </svg>
       </button>
     </div>
+  }
+
+  <!-- Modal de creación -->
+  @if (showCreateModal()) {
+    <app-create-order-modal (close)="closeCreateModal()" (created)="onOrderCreated()" />
   }
 
   <!-- Detail Modal -->

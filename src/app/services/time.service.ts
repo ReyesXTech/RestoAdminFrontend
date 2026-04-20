@@ -1,70 +1,37 @@
-// ==========================================
-// TIME SERVICE
-// ==========================================
-// Servicio para gestión centralizada del tiempo
-// Proporciona la hora actual actualizada cada segundo
-// y métodos utilitarios para comparaciones de fechas
-
+// time.service.ts
 import { Injectable, signal } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class TimeService {
-  // Signal con la hora actual, actualizada cada segundo
   private _currentTime = signal<Date>(new Date());
   readonly currentTime = this._currentTime.asReadonly();
 
   constructor() {
-    // Actualizar la hora cada segundo (solo en el navegador)
     if (typeof window !== 'undefined') {
-      setInterval(() => {
-        this._currentTime.set(new Date());
-      }, 1000);
+      setInterval(() => this._currentTime.set(new Date()), 1000);
     }
   }
 
   /**
-   * Determina si una fecha dada es hoy
+   * Formatea una hora en formato 12h con AM/PM (ej. "02:30 p. m.")
    */
-  isToday(dateString: string): boolean {
-    const orderDate = new Date(dateString);
-    return orderDate.toDateString() === this.currentTime().toDateString();
-  }
-
-  /**
-   * Determina si una fecha es anterior a hoy
-   */
-  isBeforeToday(dateString: string): boolean {
-    const orderDate = new Date(dateString);
-    const today = this.currentTime();
-    return orderDate.toDateString() !== today.toDateString() &&
-           orderDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  }
-
-  /**
-   * Determina si una fecha es posterior a hoy
-   */
-  isAfterToday(dateString: string): boolean {
-    const orderDate = new Date(dateString);
-    const today = this.currentTime();
-    return orderDate.toDateString() !== today.toDateString() &&
-           orderDate > new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  }
-
-  /**
-   * Formatea una fecha como hora (HH:mm)
-   */
-  formatTime(dateString: string): string {
-    return new Date(dateString).toLocaleTimeString('es-ES', {
+  formatTime(value: string | Date | null | undefined): string {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    return date.toLocaleTimeString('es-CU', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: true,
     });
   }
 
   /**
-   * Formatea una fecha como fecha corta (dd/mm/yyyy)
+   * Formatea una fecha como día/mes/año (ej. "19/04/2026")
    */
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+  formatDate(value: string | Date | null | undefined): string {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    return date.toLocaleDateString('es-CU', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -72,10 +39,12 @@ export class TimeService {
   }
 
   /**
-   * Formatea una fecha como fecha completa
+   * Formatea una fecha con día de la semana y mes en texto (ej. "domingo, 19 de abril de 2026")
    */
-  formatFullDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+  formatFullDate(value: string | Date | null | undefined): string {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    return date.toLocaleDateString('es-CU', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -83,9 +52,30 @@ export class TimeService {
     });
   }
 
-  /**
-   * Calcula la diferencia en minutos entre dos fechas
-   */
+  // --- Métodos de comparación (sin cambios) ---
+  isToday(dateString: string): boolean {
+    const orderDate = new Date(dateString);
+    return orderDate.toDateString() === this.currentTime().toDateString();
+  }
+
+  isBeforeToday(dateString: string): boolean {
+    const orderDate = new Date(dateString);
+    const today = this.currentTime();
+    return (
+      orderDate.toDateString() !== today.toDateString() &&
+      orderDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    );
+  }
+
+  isAfterToday(dateString: string): boolean {
+    const orderDate = new Date(dateString);
+    const today = this.currentTime();
+    return (
+      orderDate.toDateString() !== today.toDateString() &&
+      orderDate > new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    );
+  }
+
   getMinutesDiff(date1: string | Date, date2: string | Date): number {
     const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
     const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
@@ -93,26 +83,18 @@ export class TimeService {
     return Math.floor(diffMs / 60000);
   }
 
-  /**
-   * Determina si una fecha es urgente (menos de 15 minutos)
-   */
-  isUrgent(desiredDeliveryTime: string, referenceDate?: Date): boolean {
-    if (desiredDeliveryTime === 'inmediatamente') {
-      return true;
-    }
+  isUrgent(desiredDeliveryTime: string | null | undefined, referenceDate?: Date): boolean {
+    if (!desiredDeliveryTime) return false;
+    if (desiredDeliveryTime === 'inmediatamente') return true;
 
     const [hours, minutes] = desiredDeliveryTime.split(':').map(Number);
-    if (isNaN(hours) || isNaN(minutes)) {
-      return false;
-    }
+    if (isNaN(hours) || isNaN(minutes)) return false;
 
     const now = referenceDate || this.currentTime();
     const deliveryTime = new Date(now);
-    deliveryTime.setHours(hours, minutes);
+    deliveryTime.setHours(hours, minutes, 0, 0);
 
-    const diffMs = deliveryTime.getTime() - now.getTime();
-    const diffMinutes = Math.floor(diffMs / 60000);
-
+    const diffMinutes = this.getMinutesDiff(now, deliveryTime);
     return diffMinutes <= 15 && diffMinutes >= 0;
   }
 }

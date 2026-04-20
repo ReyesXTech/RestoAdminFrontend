@@ -33,7 +33,7 @@
     </div>
     <div class="preview-total">
       <span class="preview-total-label">Total</span>
-      <span class="preview-total-amount">{{ order().total | currency }}</span>
+      <span class="preview-total-amount">{{ order().totalAmount | currency }}</span>
     </div>
   </div>
 
@@ -47,7 +47,7 @@
       </div>
       <div class="order-actions">
         @if (showActions()) {
-          @if (order().status === 'pendiente') {
+          @if (order().status === OrderStatus.Pending) {
             <button
               (click)="$event.stopPropagation(); onMarkReady()"
               class="action-btn mark-ready"
@@ -59,7 +59,7 @@
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
               </svg>
             </button>
-          } @else if (order().status === 'listo') {
+          } @else if (order().status === OrderStatus.Ready) {
             <button
               (click)="$event.stopPropagation(); onRestoreToPending()"
               class="action-btn restore"
@@ -114,7 +114,7 @@
         <div
           class="order-phone"
           (click)="$event.stopPropagation(); copyPhone(order().phone!)"
-          title="Copiar teléfono"
+          title="Click para copiar"
         >
           <svg
             class="detail-icon"

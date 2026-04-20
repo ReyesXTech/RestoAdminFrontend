@@ -1,13 +1,20 @@
-import { Component, inject, signal, computed, effect, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { DataService } from '../../services/data.service';
 import { ClipboardService } from '../../services/clipboard.service';
 import { ToastService } from '../../services/toast.service';
 import { TimeService } from '../../services/time.service';
-import { FormsModule } from '@angular/forms';
-import { Order } from '../../models/models';
+import { OrderListItemDto, OrderDetailResponse, OrderStatus } from '../../models';
 import { CancelledOrderDetailModalComponent } from '../../shared/components/order-modals/cancelled-order-detail-modal.component';
 import { PendingReadyOrderDetailModalComponent } from '../../shared/components/order-modals/pending-ready-order-detail-modal.component';
+
+interface OrderGroup {
+  date: string;
+  orders: OrderListItemDto[];
+  count: number;
+}
 
 @Component({
   selector: 'app-historial',
@@ -21,70 +28,66 @@ import { PendingReadyOrderDetailModalComponent } from '../../shared/components/o
   templateUrl: './historial.component.html',
   styleUrls: ['./historial.component.scss'],
 })
-export class HistorialComponent implements OnDestroy {
+export class HistorialComponent implements OnInit, OnDestroy {
   private dataService = inject(DataService);
   private clipboardService = inject(ClipboardService);
   public toastService = inject(ToastService);
   private timeService = inject(TimeService);
 
+  // Señales del servicio
+  readonly historyOrders = this.dataService.historyOrders;
+  readonly loading = this.dataService.historyLoading;
+  readonly hasMore = this.dataService.historyHasMore;
   readonly currentTime = this.timeService.currentTime;
 
-  // Local signal to track toasts for the template
-  toasts = signal<ReturnType<typeof this.toastService.getToasts>>([]);
-  private effectRef?: ReturnType<typeof effect>;
+  // Enums para la plantilla
+  readonly OrderStatus = OrderStatus;
 
-  constructor() {
-    // Sync local toasts signal with service
-    this.effectRef = effect(() => {
-      this.toasts.set(this.toastService.getToasts());
-    });
-  }
-
-  ngOnDestroy(): void {
-    // Clear toasts when component is destroyed
-    this.toastService.clear();
-  }
-
+  // Filtros
   searchTerm = signal('');
   searchStatus = signal<'all' | 'pendiente' | 'listo' | 'cancelado'>('all');
   searchStartDate = signal('');
   searchEndDate = signal('');
 
-  filteredOrders = computed(() => {
-    let orders = this.dataService.historyOrders();
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
+  // Debounce para búsqueda
+  private searchSubject = new Subject<void>();
+  private searchSubscription = this.searchSubject
+    .pipe(debounceTime(400), distinctUntilChanged())
+    .subscribe(() => this.applyFilters());
 
-    // Filter to include orders up to and including today
-    orders = orders.filter((o) => new Date(o.orderTimeUtc) <= today);
+  // Modal
+  selectedOrder = signal<OrderDetailResponse | null>(null);
 
-    if (this.searchTerm()) {
-      const term = this.searchTerm().toLowerCase();
-      orders = orders.filter((o) => o.clientName.toLowerCase().includes(term));
-    }
+  // Toasts
+  toasts = signal<ReturnType<typeof this.toastService.getToasts>>([]);
+  private effectRef?: ReturnType<typeof effect>;
 
-    if (this.searchStatus() !== 'all') {
-      orders = orders.filter((o) => o.status === this.searchStatus());
-    }
+  constructor() {
+    this.effectRef = effect(() => {
+      this.toasts.set(this.toastService.getToasts());
+    });
+  }
 
-    if (this.searchStartDate()) {
-      const startDate = new Date(this.searchStartDate());
-      startDate.setHours(0, 0, 0, 0);
-      orders = orders.filter((o) => new Date(o.orderTimeUtc) >= startDate);
-    }
+  ngOnInit(): void {
+    // Fecha inicial: últimos 30 días
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    this.searchStartDate.set(thirtyDaysAgo.toISOString().split('T')[0]);
+    this.applyFilters();
+  }
 
-    if (this.searchEndDate()) {
-      const endDate = new Date(this.searchEndDate());
-      endDate.setHours(23, 59, 59, 999);
-      orders = orders.filter((o) => new Date(o.orderTimeUtc) <= endDate);
-    }
+  ngOnDestroy(): void {
+    this.toastService.clear();
+    this.effectRef?.destroy();
+    this.searchSubscription.unsubscribe();
+  }
 
-    return orders;
-  });
-
+  /**
+   * Agrupa los pedidos por fecha (solo presentación visual)
+   */
   groupedOrders = computed(() => {
-    const orders = this.filteredOrders();
-    const groups: { date: string; orders: any[]; count: number }[] = [];
+    const orders = this.historyOrders();
+    const groupsMap = new Map<string, OrderListItemDto[]>();
 
     orders.forEach((order) => {
       const date = new Date(order.orderTimeUtc).toLocaleDateString('es-ES', {
@@ -93,44 +96,92 @@ export class HistorialComponent implements OnDestroy {
         month: 'long',
         day: 'numeric',
       });
-      let group = groups.find((g) => g.date === date);
-      if (!group) {
-        group = { date, orders: [], count: 0 };
-        groups.push(group);
-      }
-      group.orders.push(order);
-      group.count++;
+      const existing = groupsMap.get(date) || [];
+      existing.push(order);
+      groupsMap.set(date, existing);
     });
 
+    const groups: OrderGroup[] = [];
+    for (const [date, ordersList] of groupsMap) {
+      groups.push({ date, orders: ordersList, count: ordersList.length });
+    }
     return groups;
   });
+
+  /**
+   * Aplica los filtros actuales y carga la primera página desde el backend
+   */
+  private applyFilters(): void {
+    const statusMap: Record<string, OrderStatus | undefined> = {
+      pendiente: OrderStatus.Pending,
+      listo: OrderStatus.Ready,
+      cancelado: OrderStatus.Cancelled,
+      all: undefined,
+    };
+
+    const fromDate = this.searchStartDate()
+      ? new Date(this.searchStartDate()).toISOString()
+      : undefined;
+    const toDate = this.searchEndDate() ? new Date(this.searchEndDate()).toISOString() : undefined;
+
+    this.dataService.loadHistoryOrders({
+      fromDate,
+      toDate,
+      searchTerm: this.searchTerm() || undefined,
+      status: statusMap[this.searchStatus()],
+    });
+  }
+
+  // Manejadores de eventos de filtros
+  onSearchTermChange(): void {
+    this.searchSubject.next();
+  }
+
+  onStatusChange(): void {
+    this.applyFilters();
+  }
+
+  onDateChange(): void {
+    this.applyFilters();
+  }
 
   clearFilters(): void {
     this.searchTerm.set('');
     this.searchStatus.set('all');
     this.searchStartDate.set('');
     this.searchEndDate.set('');
+    this.applyFilters();
   }
 
-  selectedOrder = signal<Order | null>(null);
+  // Scroll infinito
+  onContentScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+    const threshold = 100;
+    const nearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
 
-  viewOrder(order: Order): void {
-    this.selectedOrder.set(order);
+    if (nearBottom && this.hasMore() && !this.loading()) {
+      this.dataService.loadNextHistoryPage();
+    }
+  }
+
+  async viewOrder(order: OrderListItemDto): Promise<void> {
+    try {
+      const fullOrder = await this.dataService.getOrderById(order.id);
+      this.selectedOrder.set(fullOrder);
+    } catch {
+      this.toastService.show('Error al cargar los detalles del pedido', 'error');
+    }
   }
 
   closeDetail(): void {
     this.selectedOrder.set(null);
   }
 
-  isOrderCancelled(order: Order): boolean {
-    return order.status === 'cancelado';
+  isOrderCancelled(order: OrderDetailResponse): boolean {
+    return order.status === OrderStatus.Cancelled;
   }
 
   copyPhone(phone: string): void {
     this.clipboardService.copyPhone(phone);
-  }
-
-  isToday(dateString: string): boolean {
-    return this.timeService.isToday(dateString);
   }
 }

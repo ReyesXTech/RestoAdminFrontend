@@ -1,266 +1,258 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { Order, OrderStatus, CreateOrderRequest } from '../models/models';
+import { Injectable, inject, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
+import {
+  OrderListItemDto,
+  OrderDetailResponse,
+  CancelOrderCommand,
+  CreateOrderCommand,
+} from '../models/order.models';
+import { OrderStatus } from '../models';
+import { PagedResult } from '../models/common.models';
+
+interface PaginatedState {
+  items: OrderListItemDto[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  loading: boolean;
+  hasMore: boolean;
+}
+
+const initialPaginatedState: PaginatedState = {
+  items: [],
+  totalCount: 0,
+  currentPage: 0,
+  pageSize: 50,
+  loading: false,
+  hasMore: true,
+};
 
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
-  private _orders = signal<Order[]>([]);
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
 
-  readonly orders = this._orders.asReadonly();
+  // Estados separados para cada tipo de lista
+  private _pendingState = signal<PaginatedState>({ ...initialPaginatedState });
+  private _readyState = signal<PaginatedState>({ ...initialPaginatedState });
+  private _cancelledState = signal<PaginatedState>({ ...initialPaginatedState });
+  private _historyState = signal<PaginatedState>({ ...initialPaginatedState });
 
-  constructor() {
-    this._orders.set(this.createSampleOrders());
+  // Exposición de señales de solo lectura
+  readonly pendingOrders = computed(() => this._pendingState().items);
+  readonly pendingLoading = computed(() => this._pendingState().loading);
+  readonly pendingHasMore = computed(() => this._pendingState().hasMore);
+
+  readonly readyOrders = computed(() => this._readyState().items);
+  readonly readyLoading = computed(() => this._readyState().loading);
+  readonly readyHasMore = computed(() => this._readyState().hasMore);
+
+  readonly cancelledOrders = computed(() => this._cancelledState().items);
+  readonly cancelledLoading = computed(() => this._cancelledState().loading);
+  readonly cancelledHasMore = computed(() => this._cancelledState().hasMore);
+
+  readonly historyOrders = computed(() => this._historyState().items);
+  readonly historyLoading = computed(() => this._historyState().loading);
+  readonly historyHasMore = computed(() => this._historyState().hasMore);
+
+  // Filtros actuales para poder cargar siguientes páginas
+  private pendingFilters: any = {};
+  private readyFilters: any = {};
+  private cancelledFilters: any = {};
+  private historyFilters: any = {};
+
+  createOrder(command: CreateOrderCommand): Promise<string> {
+    return firstValueFrom(this.http.post<string>(`${this.apiUrl}/orders`, command));
   }
 
-  // Computed signals (filtros) – se mantienen similares pero usando nuevos campos
-  readonly todayOrders = computed(() => {
-    const today = new Date().toDateString();
-    return this._orders().filter(
-      (o) =>
-        new Date(o.orderTimeUtc).toDateString() === today && o.status !== OrderStatus.Cancelled,
+  // ==================== MÉTODO GENÉRICO DE CARGA DE PÁGINA ====================
+  private async loadPage(
+    stateUpdater: (updater: (prev: PaginatedState) => PaginatedState) => void,
+    filters: any,
+    page: number,
+    pageSize: number,
+    additionalParams: any = {},
+  ): Promise<void> {
+    const allParams = { ...filters, ...additionalParams };
+    const cleanParams = Object.fromEntries(
+      Object.entries(allParams).filter(([_, value]) => value != null),
     );
-  });
 
-  readonly pendingOrders = computed(() => {
-    const today = new Date().toDateString();
-    return this._orders()
-      .filter(
-        (o) =>
-          new Date(o.orderTimeUtc).toDateString() === today && o.status === OrderStatus.Pending,
-      )
-      .sort((a, b) => {
-        // Ordenar por desiredDeliveryTimeUtc
-        return (
-          new Date(a.desiredDeliveryTimeUtc).getTime() -
-          new Date(b.desiredDeliveryTimeUtc).getTime()
-        );
-      });
-  });
-
-  readonly listosOrders = computed(() => {
-    const today = new Date().toDateString();
-    return this._orders()
-      .filter(
-        (o) => new Date(o.orderTimeUtc).toDateString() === today && o.status === OrderStatus.Ready,
-      )
-      .sort((a, b) => {
-        const deliveryCompare =
-          new Date(a.desiredDeliveryTimeUtc).getTime() -
-          new Date(b.desiredDeliveryTimeUtc).getTime();
-        if (deliveryCompare !== 0) return deliveryCompare;
-        const aReady = a.readyTimeUtc ? new Date(a.readyTimeUtc).getTime() : Infinity;
-        const bReady = b.readyTimeUtc ? new Date(b.readyTimeUtc).getTime() : Infinity;
-        return aReady - bReady;
-      });
-  });
-
-  readonly cancelledOrders = computed(() =>
-    this._orders().filter((o) => o.status === OrderStatus.Cancelled),
-  );
-
-  readonly historyOrders = computed(() => {
-    const today = new Date().toDateString();
-    return this._orders().filter((o) => new Date(o.orderTimeUtc).toDateString() !== today);
-  });
-
-  readonly totalOrders = computed(() => this._orders().length);
-  readonly pendingOrdersCount = computed(() => this.pendingOrders().length);
-  readonly listosOrdersCount = computed(() => this.listosOrders().length);
-  readonly totalRevenue = computed(() =>
-    this._orders()
-      .filter((o) => o.status === OrderStatus.Ready)
-      .reduce((sum, o) => sum + o.total, 0),
-  );
-
-  updateOrderStatus(id: string, status: OrderStatus, readyTimeUtc?: string): void {
-    this._orders.update((orders) =>
-      orders.map((o) =>
-        o.id === id
-          ? {
-              ...o,
-              status,
-              readyTimeUtc:
-                status === OrderStatus.Ready
-                  ? readyTimeUtc || new Date().toISOString()
-                  : o.readyTimeUtc,
-              canceledTimeUtc:
-                status === OrderStatus.Cancelled ? new Date().toISOString() : o.canceledTimeUtc,
-            }
-          : o,
-      ),
-    );
-  }
-
-  cancelOrder(id: string): void {
-    this.updateOrderStatus(id, OrderStatus.Cancelled);
-  }
-
-  createOrder(orderData: CreateOrderRequest): void {
-    const newId = (Math.max(...this._orders().map((o) => Number(o.id)), 0) + 1).toString();
-    const total = orderData.items.reduce((sum, item) => sum + item.quantity * 10, 0); // Mock: precio ficticio
-    const newOrder: Order = {
-      id: newId,
-      customerId: orderData.customerId,
-      clientName: orderData.clientName,
-      phone: orderData.phone,
-      deliveryAddress: orderData.deliveryAddress,
-      items: orderData.items.map((item) => ({
-        productId: item.productId,
-        productName: `Producto ${item.productId}`,
-        quantity: item.quantity,
-        unitPrice: 10,
-      })),
-      total,
-      orderTimeUtc: new Date().toISOString(),
-      desiredDeliveryTimeUtc: orderData.desiredDeliveryTimeUtc,
-      status: OrderStatus.Pending,
+    const params: any = {
+      page,
+      pageSize,
+      ...cleanParams,
     };
-    this._orders.update((orders) => [...orders, newOrder]);
+
+    try {
+      const result = await firstValueFrom(
+        this.http.get<PagedResult<OrderListItemDto>>(`${this.apiUrl}/orders`, { params }),
+      );
+
+      // Normalizar status de string a número si es necesario
+      const normalizedItems = result.items.map((item) => ({
+        ...item,
+        status:
+          typeof item.status === 'string'
+            ? OrderStatus[item.status as keyof typeof OrderStatus]
+            : item.status,
+      }));
+
+      stateUpdater((prev) => {
+        // ⚠️ ¡Aquí estaba el error! Usar normalizedItems en lugar de result.items
+        const newItems = page === 1 ? normalizedItems : [...prev.items, ...normalizedItems];
+        return {
+          ...prev,
+          items: newItems,
+          totalCount: result.totalCount,
+          currentPage: result.page,
+          hasMore: result.page < result.totalPages,
+          loading: false,
+        };
+      });
+    } catch (error) {
+      console.error('Error loading page', error);
+      stateUpdater((prev) => ({ ...prev, loading: false }));
+    }
   }
 
-  getOrderById(id: string): Order | undefined {
-    return this._orders().find((o) => o.id === id);
+  private resetAndLoadFirstPage(
+    stateSignal: any,
+    stateUpdater: (updater: (prev: PaginatedState) => PaginatedState) => void,
+    filters: any,
+    additionalParams: any = {},
+  ): void {
+    stateUpdater(() => ({ ...initialPaginatedState, loading: true }));
+    this.loadPage(stateUpdater, filters, 1, initialPaginatedState.pageSize, additionalParams);
   }
 
-  // Método auxiliar para crear datos de muestra (mock) – se ajusta a nuevo modelo
-  private createSampleOrders(): Order[] {
-    const now = new Date();
-    const todayStr = now.toISOString();
-    const hourLater = new Date(now.getTime() + 3600000).toISOString();
-    // Funciones helper para generar horas relativas
-    const hoursFromNow = (h: number) => new Date(now.getTime() + h * 3600000).toISOString();
-    const hoursAgo = (h: number) => new Date(now.getTime() - h * 3600000).toISOString();
-    // ... (crear pedidos mock usando los nuevos campos)
-    // Por brevedad, devolvemos un array vacío; en la implementación real puedes generar mocks válidos.
-    return [
-      {
-        id: '1',
-        clientName: 'Juan Perez',
-        phone: '5551234',
-        deliveryAddress: 'Av. Siempre Viva 123',
-        items: [{ productId: '101', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12 }],
-        total: 12,
-        orderTimeUtc: todayStr,
-        desiredDeliveryTimeUtc: hourLater,
-        status: OrderStatus.Pending,
-      },
-      // PENDIENTES (3)
-      {
-        id: 'ord-001',
-        clientName: 'Juan Pérez',
-        phone: '555-1234',
-        deliveryAddress: 'Calle Falsa 123, Centro',
-        items: [
-          { productId: '1', productName: 'Ensalada César', quantity: 2, unitPrice: 8.5 },
-          { productId: '2', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12.0 },
-        ],
-        total: 29.0,
-        orderTimeUtc: hoursAgo(0.5), // hace media hora
-        desiredDeliveryTimeUtc: hoursFromNow(1.5),
-        status: OrderStatus.Pending,
-      },
-      {
-        id: 'ord-002',
-        clientName: 'María González',
-        phone: '555-5678',
-        deliveryAddress: 'Av. Libertador 456, Planta Baja',
-        items: [
-          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 1, unitPrice: 14.0 },
-        ],
-        total: 14.0,
-        orderTimeUtc: hoursAgo(0.2),
-        desiredDeliveryTimeUtc: hoursFromNow(2),
-        status: OrderStatus.Pending,
-      },
-      {
-        id: 'ord-003',
-        clientName: 'Carlos Ruiz',
-        phone: '555-9012',
-        deliveryAddress: 'Edificio Torres, Apto 5B',
-        items: [
-          { productId: '1', productName: 'Ensalada César', quantity: 1, unitPrice: 8.5 },
-          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 2, unitPrice: 14.0 },
-        ],
-        total: 36.5,
-        orderTimeUtc: hoursAgo(1),
-        desiredDeliveryTimeUtc: hoursFromNow(0.5), // entrega pronta
-        status: OrderStatus.Pending,
-      },
+  private loadNextPageIfAvailable(
+    state: PaginatedState,
+    stateUpdater: (updater: (prev: PaginatedState) => PaginatedState) => void,
+    filters: any,
+    additionalParams: any = {},
+  ): void {
+    if (state.loading || !state.hasMore) return;
+    stateUpdater((prev) => ({ ...prev, loading: true }));
+    this.loadPage(stateUpdater, filters, state.currentPage + 1, state.pageSize, additionalParams);
+  }
 
-      // LISTOS (2)
-      {
-        id: 'ord-004',
-        clientName: 'Ana Martínez',
-        phone: '555-3456',
-        deliveryAddress: 'Calle del Sol 789',
-        items: [{ productId: '2', productName: 'Pizza Margarita', quantity: 2, unitPrice: 12.0 }],
-        total: 24.0,
-        orderTimeUtc: hoursAgo(2),
-        desiredDeliveryTimeUtc: hoursFromNow(-0.5), // ya pasó la hora deseada
-        status: OrderStatus.Ready,
-        readyTimeUtc: hoursAgo(0.5),
-      },
-      {
-        id: 'ord-005',
-        clientName: 'Pedro Sánchez',
-        phone: '555-7890',
-        deliveryAddress: 'Urbanización Los Pinos, Casa 12',
-        items: [
-          { productId: '1', productName: 'Ensalada César', quantity: 3, unitPrice: 8.5 },
-          { productId: '2', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12.0 },
-        ],
-        total: 37.5,
-        orderTimeUtc: hoursAgo(3),
-        desiredDeliveryTimeUtc: hoursFromNow(-1),
-        status: OrderStatus.Ready,
-        readyTimeUtc: hoursAgo(1.5),
-      },
+  // ==================== PENDIENTES ====================
+  loadPendingOrders(): void {
+    this.pendingFilters = { status: OrderStatus.Pending, onlyTodayPendingReady: true };
+    this.resetAndLoadFirstPage(
+      this._pendingState,
+      (updater) => this._pendingState.update(updater),
+      this.pendingFilters,
+    );
+  }
 
-      // CANCELADOS (2)
-      {
-        id: 'ord-006',
-        clientName: 'Lucía Fernández',
-        phone: '555-1122',
-        deliveryAddress: 'Barrio La Floresta, Calle 10',
-        items: [
-          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 2, unitPrice: 14.0 },
-        ],
-        total: 28.0,
-        orderTimeUtc: hoursAgo(5),
-        desiredDeliveryTimeUtc: hoursFromNow(-2),
-        status: OrderStatus.Cancelled,
-        canceledTimeUtc: hoursAgo(3),
-      },
-      {
-        id: 'ord-007',
-        clientName: 'Roberto Díaz',
-        phone: '555-3344',
-        deliveryAddress: 'Centro Comercial Las Américas, Local 5',
-        items: [
-          { productId: '2', productName: 'Pizza Margarita', quantity: 1, unitPrice: 12.0 },
-          { productId: '1', productName: 'Ensalada César', quantity: 1, unitPrice: 8.5 },
-        ],
-        total: 20.5,
-        orderTimeUtc: hoursAgo(8),
-        desiredDeliveryTimeUtc: hoursFromNow(-4),
-        status: OrderStatus.Cancelled,
-        canceledTimeUtc: hoursAgo(6),
-      },
+  loadNextPendingPage(): void {
+    this.loadNextPageIfAvailable(
+      this._pendingState(),
+      (updater) => this._pendingState.update(updater),
+      this.pendingFilters,
+    );
+  }
 
-      // HISTÓRICO (de días anteriores, no aparecerá en "Hoy")
-      {
-        id: 'ord-008',
-        clientName: 'Sofía Ramírez',
-        phone: '555-5566',
-        deliveryAddress: 'Av. Siempre Viva 742',
-        items: [
-          { productId: '3', productName: 'Spaghetti Carbonara', quantity: 1, unitPrice: 14.0 },
-        ],
-        total: 14.0,
-        orderTimeUtc: new Date(now.getTime() - 86400000).toISOString(), // ayer
-        desiredDeliveryTimeUtc: new Date(now.getTime() - 82800000).toISOString(),
-        status: OrderStatus.Ready,
-        readyTimeUtc: new Date(now.getTime() - 84000000).toISOString(),
-      },
-    ];
+  // ==================== LISTOS ====================
+  loadReadyOrders(): void {
+    this.readyFilters = { status: OrderStatus.Ready, onlyTodayPendingReady: true };
+    this.resetAndLoadFirstPage(
+      this._readyState,
+      (updater) => this._readyState.update(updater),
+      this.readyFilters,
+    );
+  }
+
+  loadNextReadyPage(): void {
+    this.loadNextPageIfAvailable(
+      this._readyState(),
+      (updater) => this._readyState.update(updater),
+      this.readyFilters,
+    );
+  }
+
+  // ==================== CANCELADOS ====================
+  loadCancelledOrders(): void {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    this.cancelledFilters = {
+      status: OrderStatus.Cancelled,
+      fromDate: thirtyDaysAgo.toISOString(),
+    };
+    this.resetAndLoadFirstPage(
+      this._cancelledState,
+      (updater) => this._cancelledState.update(updater),
+      this.cancelledFilters,
+    );
+  }
+
+  loadNextCancelledPage(): void {
+    this.loadNextPageIfAvailable(
+      this._cancelledState(),
+      (updater) => this._cancelledState.update(updater),
+      this.cancelledFilters,
+    );
+  }
+
+  // ==================== HISTORIAL ====================
+  loadHistoryOrders(filters: {
+    fromDate?: string;
+    toDate?: string;
+    searchTerm?: string;
+    status?: OrderStatus;
+  }): void {
+    this.historyFilters = { ...filters };
+    this.resetAndLoadFirstPage(
+      this._historyState,
+      (updater) => this._historyState.update(updater),
+      this.historyFilters,
+    );
+  }
+
+  loadNextHistoryPage(): void {
+    this.loadNextPageIfAvailable(
+      this._historyState(),
+      (updater) => this._historyState.update(updater),
+      this.historyFilters,
+    );
+  }
+
+  clearHistory(): void {
+    this._historyState.set({ ...initialPaginatedState });
+    this.historyFilters = {};
+  }
+
+  // ==================== DETALLE Y ACCIONES ====================
+  async getOrderById(id: string): Promise<OrderDetailResponse> {
+    const order = await firstValueFrom(
+      this.http.get<OrderDetailResponse>(`${this.apiUrl}/orders/${id}`),
+    );
+    // Normalizar status de string a número si es necesario
+    return {
+      ...order,
+      status:
+        typeof order.status === 'string'
+          ? OrderStatus[order.status as keyof typeof OrderStatus]
+          : order.status,
+    };
+  }
+  markAsReady(orderId: string): Promise<void> {
+    return firstValueFrom(this.http.patch<void>(`${this.apiUrl}/orders/${orderId}/ready`, {}));
+  }
+
+  revertToPending(orderId: string): Promise<void> {
+    return firstValueFrom(
+      this.http.patch<void>(`${this.apiUrl}/orders/${orderId}/revert-to-pending`, {}),
+    );
+  }
+
+  cancelOrder(command: CancelOrderCommand): Promise<void> {
+    return firstValueFrom(
+      this.http.patch<void>(`${this.apiUrl}/orders/${command.orderId}/cancel`, command),
+    );
   }
 }

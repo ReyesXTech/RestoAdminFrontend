@@ -1,6 +1,7 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Order } from '../../../models/models';
+import { OrderDetailResponse, OrderStatus } from '../../../models';
+import { TimeService } from '../../../services/time.service';
 
 @Component({
   selector: 'app-pending-ready-order-detail-modal',
@@ -10,23 +11,25 @@ import { Order } from '../../../models/models';
   styleUrls: ['./pending-ready-order-detail-modal.component.scss'],
 })
 export class PendingReadyOrderDetailModalComponent {
-  // Inputs
-  order = input.required<Order | null>();
-  isUrgent = input<boolean>(false);
+  private timeService = inject(TimeService);
 
-  // Outputs
+  order = input.required<OrderDetailResponse | null>();
+  isUrgent = input<boolean>(false);
   close = output<void>();
 
-  getWhatsAppLink(order: Order): string {
+  readonly OrderStatus = OrderStatus;
+
+  getWhatsAppLink(order: OrderDetailResponse): string {
     const phone = order.phone || '';
     const message = encodeURIComponent(
-      `Hola ${order.clientName}, tu pedido de Rey Sushi está siendo procesado.`
+      `Hola ${order.clientName}, tu pedido de Rey Sushi está siendo procesado.`,
     );
     return `https://wa.me/${phone}?text=${message}`;
   }
 
-  formatTime(dateString: string): string {
-    return new Date(dateString).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  formatTime(dateString: string | null | undefined): string {
+    if (!dateString) return '—'; // o '' si prefieres vacío
+    return this.timeService.formatTime(dateString);
   }
 
   onClose(): void {

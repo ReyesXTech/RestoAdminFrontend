@@ -9,8 +9,8 @@
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 12rem);
-
+  //max-height: calc(100vh - 12rem);
+  height: 100%;
   &.hidden {
     display: none;
   }
@@ -154,5 +154,81 @@
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+// Ajuste de color del scroll en modo oscuro
+:host-context([data-theme='dark']) {
+  .list-content {
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2); // más claro para contraste
+      border-radius: 10px;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.35);
+      }
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+// ==========================================
+// SUAVIZAR APARICIÓN DE TARJETAS DE PEDIDO (evita flicker)
+// ==========================================
+
+.list-content {
+  // Aplicamos animación a las tarjetas de pedido dentro de la lista
+  ::ng-deep app-order-card {
+    display: block;
+    animation: fade-in-up 0.25s ease-out forwards;
+    opacity: 0;
+
+    // Retraso escalonado para un efecto de cascada suave
+    @for $i from 1 through 20 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.015}s;
+      }
+    }
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  // ⏳ Retraso para evitar flicker en cargas rápidas
+  opacity: 0;
+  animation: delayed-appear 0.01s 0.25s forwards;
+
+  @keyframes delayed-appear {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--text-tertiary);
   }
 }

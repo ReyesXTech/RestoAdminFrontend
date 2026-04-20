@@ -184,7 +184,9 @@
         <div class="user-section">
           <div class="user-info">
             <p class="user-name">{{ currentUser()?.fullName || 'Admin User' }}</p>
-            <p class="user-role">{{ currentUser()?.role === 'operario' ? 'Operario' : 'Admin' }}</p>
+            <p class="user-role">
+              {{ currentUser()?.role === UserRole.Operator ? 'Operario' : 'Administrador' }}
+            </p>
           </div>
           <button (click)="logout()" class="logout-btn" title="Cerrar sesión">
             <svg class="logout-icon" viewBox="0 0 24 24" fill="currentColor">

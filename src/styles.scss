@@ -59,3 +59,31 @@
 .flex-1 {
   flex: 1;
 }
+
+/* ============================================
+   SCROLLBAR DARK MODE - GLOBAL
+   ============================================ */
+[data-theme='dark'] {
+  .historial-content {
+    // WebKit (Chrome, Edge, Safari)
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    &::-webkit-scrollbar-track {
+      background: #1f2937; // surface-bg oscuro
+      border-radius: 10px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #00050b; // border-light
+      border-radius: 10px;
+      &:hover {
+        background: #6b7280; // un poco más claro al pasar el ratón
+      }
+    }
+
+    // Firefox
+    scrollbar-color: #4b5563 #1f2937;
+    scrollbar-width: thin;
+  }
+}

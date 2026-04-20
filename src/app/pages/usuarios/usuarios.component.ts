@@ -1,8 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
-import { User, UserRole } from '../../models/models';
+import { UserResponse, UserRole } from '../../models';
 
 @Component({
   selector: 'app-usuarios',
@@ -11,8 +11,7 @@ import { User, UserRole } from '../../models/models';
   templateUrl: './usuarios.component.html',
   styleUrls: ['./usuarios.component.scss'],
 })
-export class UsuariosComponent {
-  // Exponer el enum para usarlo en la plantilla HTML
+export class UsuariosComponent implements OnInit {
   readonly UserRole = UserRole;
 
   private dataService = inject(DataService);
@@ -20,43 +19,40 @@ export class UsuariosComponent {
   readonly users = this.dataService.users;
   readonly currentUser = this.dataService.currentUser;
 
-  // CORREGIDO: usar el enum correctamente
   readonly roles: UserRole[] = [UserRole.Admin, UserRole.Operator];
 
-  // Delete confirmation modal
   showDeleteModal = signal(false);
-  userToDelete = signal<User | null>(null);
+  userToDelete = signal<UserResponse | null>(null);
 
   showModal = false;
   modalMode: 'add' | 'edit' = 'add';
-
-  // CORREGIDO: permitir string | number | null
-  editingId: string | number | null = null;
+  editingId: string | null = null;
 
   formName = '';
   formPhone = '';
-
-  // CORREGIDO: usar el tipo UserRole directamente
   formRole: UserRole = UserRole.Operator;
+  formPassword = ''; // solo para crear
+
+  ngOnInit(): void {
+    this.dataService.loadUsers();
+  }
 
   openAddModal(): void {
     this.formName = '';
     this.formPhone = '';
-    // this.formEmail = '';  // eliminado
-    this.formRole = UserRole.Operator; // CORREGIDO
+    this.formPassword = '';
+    this.formRole = UserRole.Operator;
     this.showModal = true;
     this.editingId = null;
     this.modalMode = 'add';
   }
 
-  openEditModal(user: User): void {
+  openEditModal(user: UserResponse): void {
     this.formName = user.fullName;
-    // CORREGIDO: manejar phone opcional
     this.formPhone = user.phone || '';
-    // ELIMINADO: this.formEmail = user.email;
     this.formRole = user.role;
+    this.formPassword = ''; // no se muestra en edición
     this.showModal = true;
-    // CORREGIDO: permitir cualquier tipo de id
     this.editingId = user.id;
     this.modalMode = 'edit';
   }
@@ -65,56 +61,56 @@ export class UsuariosComponent {
     this.showModal = false;
   }
 
-  saveUser(): void {
+  async saveUser(): Promise<void> {
     if (!this.formName.trim() || !this.formPhone.trim()) return;
 
-    const itemData = {
-      name: this.formName,
-      fullName: this.formName,
-      phone: this.formPhone,
-      role: this.formRole,
-    };
-
-    if (this.modalMode === 'add') {
-      this.dataService.addUser(itemData);
-    } else if (this.editingId !== null) {
-      this.dataService.updateUser({
-        id: this.editingId,
-        ...itemData,
-      });
+    try {
+      if (this.modalMode === 'add') {
+        await this.dataService.addUser({
+          fullName: this.formName,
+          phone: this.formPhone,
+          role: this.formRole,
+          password: this.formPassword,
+        });
+      } else if (this.editingId) {
+        await this.dataService.updateUser({
+          id: this.editingId,
+          fullName: this.formName,
+          phone: this.formPhone,
+          role: this.formRole,
+          password: this.formPassword || undefined,
+        });
+      }
+      this.closeModal();
+      this.dataService.loadUsers(); // Recargar lista
+    } catch (error) {
+      console.error('Error saving user', error);
     }
-
-    this.closeModal();
   }
 
-  deleteUser(user: User): void {
+  deleteUser(user: UserResponse): void {
     const current = this.dataService.currentUser();
-    if (current?.role !== UserRole.Admin) {
-      return;
-    }
+    if (current?.role !== UserRole.Admin) return;
     this.userToDelete.set(user);
     this.showDeleteModal.set(true);
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const user = this.userToDelete();
     if (user) {
-      this.dataService.deleteUser(user.id);
-      this.showDeleteModal.set(false);
-      this.userToDelete.set(null);
+      try {
+        await this.dataService.deleteUser(user.id);
+        this.showDeleteModal.set(false);
+        this.userToDelete.set(null);
+        this.dataService.loadUsers();
+      } catch (error) {
+        console.error('Error deleting user', error);
+      }
     }
   }
 
   closeDeleteModal(): void {
     this.showDeleteModal.set(false);
     this.userToDelete.set(null);
-  }
-
-  roleBadgeClass(role: UserRole): string {
-    const map: Record<UserRole, string> = {
-      [UserRole.Admin]: 'bg-purple-100 text-purple-700 border border-purple-300',
-      [UserRole.Operator]: 'bg-blue-100 text-blue-700 border border-blue-300',
-    };
-    return map[role];
   }
 }

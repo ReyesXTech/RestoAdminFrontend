@@ -83,7 +83,7 @@
         text-align: left;
 
         &:last-child {
-          text-align: right;
+          text-align: left;
         }
       }
     }
@@ -172,6 +172,7 @@
               font-weight: 600;
               padding: 0.5rem 0.75rem;
               border-radius: 0.5rem;
+              border: 1px gray solid;
               white-space: nowrap;
               opacity: 0;
               visibility: hidden;
@@ -552,5 +553,31 @@
   .delete-modal {
     padding: 1.5rem;
     max-width: calc(100% - 2rem);
+  }
+}
+
+// ==========================================
+// SUAVIZAR APARICIÓN DE LA TABLA (evita flicker)
+// ==========================================
+
+.usuarios-table tbody tr {
+  animation: fade-in-up 0.25s ease-out forwards;
+  opacity: 0;
+
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.02}s;
+    }
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

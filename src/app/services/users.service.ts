@@ -1,45 +1,42 @@
-import { Injectable, signal } from '@angular/core';
-import { User, UserRole } from '../models/models';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
+import {
+  CreateUserCommand,
+  UserResponse,
+  UpdateUserCommand,
+  DeleteUserCommand,
+  GetUserByIdQuery,
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-  private _users = signal<User[]>([
-    {
-      id: '1',
-      fullName: 'Admin',
-      role: UserRole.Admin,
-      phone: '5550001',
-      isActive: true,
-    },
-    {
-      id: '2',
-      fullName: 'Empleado 1',
-      role: UserRole.Operator,
-      phone: '5550002',
-      isActive: true,
-    },
-  ]);
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
 
+  private _users = signal<UserResponse[]>([]);
   readonly users = this._users.asReadonly();
 
-  addUser(user: Omit<User, 'id'>): void {
-    const newId = (Math.max(...this._users().map((u) => Number(u.id)), 0) + 1).toString();
-    this._users.update((users) => [...users, { ...user, id: newId }]);
+  loadAllUsers(): void {
+    firstValueFrom(this.http.get<UserResponse[]>(`${this.apiUrl}/users`))
+      .then((data) => this._users.set(data))
+      .catch((err) => console.error('Error loading users', err));
   }
 
-  updateUser(user: User): void {
-    this._users.update((users) => users.map((u) => (u.id === user.id ? user : u)));
+  getUserById(query: GetUserByIdQuery): Promise<UserResponse> {
+    return firstValueFrom(this.http.get<UserResponse>(`${this.apiUrl}/users/${query.id}`));
   }
 
-  deleteUser(id: string): void {
-    this._users.update((users) => users.filter((u) => u.id !== id));
+  createUser(command: CreateUserCommand): Promise<string> {
+    return firstValueFrom(this.http.post<string>(`${this.apiUrl}/users`, command));
   }
 
-  getUserById(id: string): User | undefined {
-    return this._users().find((u) => u.id === id);
+  updateUser(command: UpdateUserCommand): Promise<void> {
+    return firstValueFrom(this.http.put<void>(`${this.apiUrl}/users/${command.id}`, command));
   }
 
-  getUsersByRole(role: UserRole): User[] {
-    return this._users().filter((u) => u.role === role);
+  deleteUser(command: DeleteUserCommand): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${this.apiUrl}/users/${command.id}`));
   }
 }

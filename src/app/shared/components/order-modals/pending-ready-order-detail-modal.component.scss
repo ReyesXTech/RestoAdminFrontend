@@ -20,8 +20,10 @@
   width: 100%;
   max-width: 32rem;
   overflow: hidden;
-  box-shadow: var(--shadow-xl);
   animation: pop-in 0.2s ease-out;
+  box-shadow:
+    0 0 0 1px #9ca3af,
+    var(--shadow-xl);
 
   &.modal-fade-in {
     animation: slide-up-fade 0.3s ease-out;
@@ -197,7 +199,6 @@
   }
 }
 
-// Order Items List
 .order-items-list {
   display: flex;
   flex-direction: column;
@@ -207,7 +208,7 @@
   .order-item-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline; // Cambiado a baseline para mejor alineación textual
     padding: 0.625rem 0;
     border-bottom: 1px dashed var(--border-color);
 
@@ -217,32 +218,40 @@
 
     .item-info {
       display: flex;
-      align-items: center;
+      align-items: baseline; // Alineación consistente
       gap: 0.625rem;
+      flex: 1; // Permite que ocupe el espacio necesario
 
       .item-quantity {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         min-width: 2rem;
-        padding: 0.25rem 0.5rem;
+        padding: 0.125rem 0.5rem;
         background-color: color(indigo-100);
         color: color(indigo-700);
-        font-size: 0.8125rem;
+        font-size: 1rem; // Tamaño consistente
         font-weight: 700;
         border-radius: 0.375rem;
         text-align: center;
+        flex-shrink: 0; // Evita que se encoja
       }
 
       .item-name {
-        font-size: 0.875rem;
-        color: color(gray-700);
-        font-weight: 500;
+        font-size: 1rem; // Mismo tamaño que subtotal
+        font-weight: 400;
+        color: var(--text-primary);
+        line-height: 1.5; // Line-height consistente
       }
     }
 
     .item-subtotal {
-      font-size: 0.875rem;
-      font-weight: 700;
+      font-size: 1rem; // Mismo tamaño que item-name
+      font-weight: 400;
       color: var(--text-primary);
+      line-height: 1.5; // Mismo line-height
+      flex-shrink: 0; // Evita que se encoja
+      text-align: right; // Alineación explícita
     }
   }
 }
@@ -341,4 +350,10 @@
   50% {
     opacity: 0.7;
   }
+}
+
+:host-context([data-theme='dark']) .modal-content {
+  box-shadow:
+    0 0 0 1px #334155,
+    var(--shadow-xl);
 }

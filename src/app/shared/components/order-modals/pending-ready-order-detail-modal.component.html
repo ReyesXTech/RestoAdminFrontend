@@ -4,8 +4,8 @@
       <!-- Modal Header -->
       <div
         class="modal-header"
-        [class.pending]="order()!.status === 'pendiente'"
-        [class.ready]="order()!.status === 'listo'"
+        [class.pending]="order()!.status === OrderStatus.Pending"
+        [class.ready]="order()!.status === OrderStatus.Ready"
       >
         <button (click)="onClose()" class="close-btn">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,7 +35,7 @@
           </svg>
           {{ order()!.deliveryAddress }}
         </p>
-        @if (order()!.status === 'listo') {
+        @if (order()!.status === OrderStatus.Ready) {
           <span class="status-badge ready">LISTO PARA ENTREGA</span>
         } @else if (isUrgent()) {
           <span class="status-badge urgent">URGENTE</span>
@@ -49,7 +49,7 @@
           <div class="delivery-info-card">
             <div class="info-item primary">
               <span class="label">Entrega Deseada</span>
-              <span class="value primary-value">{{ order()!.desiredDeliveryTimeUtc }}</span>
+              <span class="value">{{ formatTime(order()!.desiredDeliveryTimeUtc) }}</span>
             </div>
             <div class="info-item">
               <span class="label">Teléfono</span>
@@ -63,7 +63,7 @@
           <span class="time-label">Pedido: {{ formatTime(order()!.orderTimeUtc) }}</span>
           @if (order()!.readyTimeUtc) {
             <span class="time-separator">•</span>
-            <span class="time-label ready">Listo: {{ formatTime(order()!.readyTimeUtc!) }}</span>
+            <span class="time-label ready">Listo: {{ formatTime(order()!.readyTimeUtc) }}</span>
           }
         </div>
 
@@ -71,13 +71,13 @@
         <div class="info-section">
           <h3 class="section-title">Resumen del Pedido</h3>
           <div class="order-items-list">
-            @for (item of order()!.items; track item.name) {
+            @for (item of order()!.items; track item.productId) {
               <div class="order-item-row">
                 <div class="item-info">
                   <span class="item-quantity">{{ item.quantity }}x</span>
-                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-name">{{ item.productName }}</span>
                 </div>
-                <span class="item-subtotal">{{ item.unitPrice * item.quantity | currency }}</span>
+                <span class="item-subtotal">{{ item.subtotalAmount | currency }}</span>
               </div>
             }
           </div>
@@ -86,7 +86,7 @@
         <!-- Total -->
         <div class="total-section">
           <span class="total-label">TOTAL</span>
-          <span class="total-amount">{{ order()!.total | currency }}</span>
+          <span class="total-amount">{{ order()!.totalAmount | currency }}</span>
         </div>
 
         <!-- Actions -->

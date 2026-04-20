@@ -26,12 +26,13 @@
         <input
           type="text"
           [(ngModel)]="searchTerm"
-          placeholder="Buscar por nombre..."
+          (ngModelChange)="onSearchTermChange()"
+          placeholder="Buscar por nombre o teléfono..."
           class="search-input"
         />
       </div>
       <div class="select-wrapper">
-        <select [(ngModel)]="searchStatus" class="status-select">
+        <select [(ngModel)]="searchStatus" (ngModelChange)="onStatusChange()" class="status-select">
           <option value="all">Todos los estados</option>
           <option value="pendiente">Pendiente</option>
           <option value="listo">Listo</option>
@@ -50,7 +51,12 @@
           </svg>
           Desde:
         </label>
-        <input type="date" [(ngModel)]="searchStartDate" class="date-input" />
+        <input
+          type="date"
+          [(ngModel)]="searchStartDate"
+          (ngModelChange)="onDateChange()"
+          class="date-input"
+        />
       </div>
       <div class="date-range">
         <label>
@@ -62,7 +68,12 @@
           </svg>
           Hasta:
         </label>
-        <input type="date" [(ngModel)]="searchEndDate" class="date-input" />
+        <input
+          type="date"
+          [(ngModel)]="searchEndDate"
+          (ngModelChange)="onDateChange()"
+          class="date-input"
+        />
       </div>
       <button (click)="clearFilters()" class="clear-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -74,7 +85,7 @@
     </div>
   </div>
 
-  <div class="historial-content">
+  <div class="historial-content" (scroll)="onContentScroll($event)">
     @for (group of groupedOrders(); track group.date) {
       <div class="date-group">
         <div class="date-header">
@@ -100,31 +111,51 @@
             @for (order of group.orders; track order.id) {
               <tr
                 (click)="viewOrder(order)"
-                [class.cancelled]="order.status === 'cancelado'"
-                [class.ready]="order.status === 'listo'"
-                [class.pending]="order.status === 'pendiente'"
+                [class.cancelled]="order.status === OrderStatus.Cancelled"
+                [class.ready]="order.status === OrderStatus.Ready"
+                [class.pending]="order.status === OrderStatus.Pending"
               >
                 <td>
                   <div class="client-name">{{ order.clientName }}</div>
-                  @if (order.status === 'cancelado') {
+                  @if (order.status === OrderStatus.Cancelled) {
                     <div class="status-badge cancelled">CANCELADO</div>
-                  } @else if (order.status === 'listo') {
+                  } @else if (order.status === OrderStatus.Ready) {
                     <div class="status-badge ready">LISTO</div>
-                  } @else if (order.status === 'pendiente') {
+                  } @else if (order.status === OrderStatus.Pending) {
                     <div class="status-badge pending">PENDIENTE</div>
                   }
                 </td>
-                <td>{{ order.address }}</td>
+                <td>
+                  <span
+                    class="address"
+                    [class.address-cancelled]="order.status === OrderStatus.Cancelled"
+                    [class.address-ready]="order.status === OrderStatus.Ready"
+                    [class.address-pending]="order.status === OrderStatus.Pending"
+                  >
+                    {{ order.deliveryAddress }}
+                  </span>
+                </td>
                 <td>
                   @if (order.phone) {
                     <span
                       class="phone-number"
-                      [class.phone-cancelled]="order.status === 'cancelado'"
-                      [class.phone-ready]="order.status === 'listo'"
-                      [class.phone-pending]="order.status === 'pendiente'"
+                      [class.phone-cancelled]="order.status === OrderStatus.Cancelled"
+                      [class.phone-ready]="order.status === OrderStatus.Ready"
+                      [class.phone-pending]="order.status === OrderStatus.Pending"
                       (click)="$event.stopPropagation(); copyPhone(order.phone)"
                       title="Click para copiar"
                     >
+                      <svg
+                        class="phone-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                        />
+                      </svg>
                       {{ order.phone }}
                       <svg
                         class="copy-icon"
@@ -141,14 +172,25 @@
                     <span class="no-phone">N/A</span>
                   }
                 </td>
-                <td>{{ order.orderTimeUtc | date: 'shortTime' }}</td>
-                <td
-                  class="total"
-                  [class.total-cancelled]="order.status === 'cancelado'"
-                  [class.total-ready]="order.status === 'listo'"
-                  [class.total-pending]="order.status === 'pendiente'"
-                >
-                  {{ order.total | currency }}
+                <td>
+                  <span
+                    class="time"
+                    [class.time-cancelled]="order.status === OrderStatus.Cancelled"
+                    [class.time-ready]="order.status === OrderStatus.Ready"
+                    [class.time-pending]="order.status === OrderStatus.Pending"
+                  >
+                    {{ order.orderTimeUtc | date: 'shortTime' }}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    class="total"
+                    [class.total-cancelled]="order.status === OrderStatus.Cancelled"
+                    [class.total-ready]="order.status === OrderStatus.Ready"
+                    [class.total-pending]="order.status === OrderStatus.Pending"
+                  >
+                    {{ order.totalAmount | currency }}
+                  </span>
                 </td>
               </tr>
             }
@@ -157,7 +199,27 @@
       </div>
     }
 
-    @if (groupedOrders().length === 0) {
+    <!-- Indicador de carga -->
+    @if (loading()) {
+      <div class="loading-indicator">
+        <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="31.4 31.4">
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from="0 12 12"
+              to="360 12 12"
+              dur="1s"
+              repeatCount="indefinite"
+            />
+          </circle>
+        </svg>
+        <span>Cargando más pedidos...</span>
+      </div>
+    }
+
+    <!-- Estado vacío -->
+    @if (groupedOrders().length === 0 && !loading()) {
       <div class="empty-state">
         <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -165,7 +227,7 @@
             stroke-linejoin="round"
             stroke-width="1"
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-          ></path>
+          />
         </svg>
         <p class="empty-text">No se encontraron pedidos en el historial.</p>
       </div>

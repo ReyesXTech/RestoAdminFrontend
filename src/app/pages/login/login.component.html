@@ -15,14 +15,15 @@
     <div class="login-card">
       <form class="login-form" (ngSubmit)="onSubmit()">
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="fullName">Nombre de usuario</label>
           <input
-            id="email"
-            name="email"
-            type="email"
-            [(ngModel)]="email"
+            id="fullName"
+            name="fullName"
+            type="text"
+            [(ngModel)]="fullName"
             required
-            placeholder="admin@resto.com"
+            placeholder="ej. Juan Pérez"
+            [disabled]="loading()"
           />
         </div>
 
@@ -35,6 +36,7 @@
             [(ngModel)]="password"
             required
             placeholder="••••••••"
+            [disabled]="loading()"
           />
         </div>
 
@@ -51,7 +53,24 @@
           </div>
         }
 
-        <button type="submit" class="submit-btn">Acceder al Panel</button>
+        <button type="submit" class="submit-btn" [disabled]="loading()">
+          @if (loading()) {
+            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="31.4 31.4">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 12 12"
+                  to="360 12 12"
+                  dur="1s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            </svg>
+          } @else {
+            Acceder al Panel
+          }
+        </button>
       </form>
 
       <div class="login-footer">

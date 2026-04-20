@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { DataService } from '../services/data.service';
 import { ThemeService, Theme } from '../services/theme.service';
+import { UserRole } from '../models';
 
 @Component({
   selector: 'app-layout',
@@ -28,6 +29,8 @@ export class LayoutComponent {
     '/cancelados': 'Pedidos Cancelados',
     '/historial': 'Historial',
   };
+
+  readonly UserRole = UserRole;
 
   get pageTitle(): string {
     return this.pageTitles[this.router.url] ?? 'Rey Sushi';

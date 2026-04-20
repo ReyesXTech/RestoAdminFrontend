@@ -180,8 +180,6 @@
       height: 1.2rem;
     }
 
-    // Eliminamos los estilos de .action-tooltip que estaban aquí
-
     &.mark-ready {
       background: #10b981;
       color: white;
@@ -240,7 +238,7 @@
   }
 }
 
-// Modo oscuro (si es necesario)
+// Modo oscuro
 [data-theme='dark'] {
   .action-tooltip-fixed {
     background: #374151;
@@ -270,7 +268,7 @@
     }
   }
   .order-phone {
-    background: var(--surface-muted);
+    background: color-mix(in srgb, var(--surface-muted) 95%, black);
     padding: 0.3rem 0.7rem;
     border-radius: 2rem;
     width: fit-content;

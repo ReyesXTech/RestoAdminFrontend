@@ -1,6 +1,6 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Order } from '../../../models/models';
+import { OrderListItemDto, OrderStatus } from '../../../models';
 import { ClipboardService } from '../../../services/clipboard.service';
 
 @Component({
@@ -11,31 +11,31 @@ import { ClipboardService } from '../../../services/clipboard.service';
   styleUrls: ['./order-card.component.scss'],
 })
 export class OrderCardComponent {
-  order = input.required<Order>();
+  private clipboardService = inject(ClipboardService);
+
+  order = input.required<OrderListItemDto>();
   previewEnabled = input<boolean>(false);
   showActions = input<boolean>(true);
   currentTime = input<Date>(new Date());
   orderType = input<'pendientes' | 'listos'>('pendientes');
 
-  viewOrder = output<Order>();
+  viewOrder = output<OrderListItemDto>();
   markReady = output<string>();
-  cancelOrder = output<Order>();
+  cancelOrder = output<OrderListItemDto>();
   restoreToPending = output<string>();
-
-  private clipboardService = new ClipboardService();
 
   // Tooltip state
   activeTooltip = signal<string | null>(null);
   tooltipPosition = signal({ x: 0, y: 0 });
 
+  // Exponer enum a la plantilla
+  readonly OrderStatus = OrderStatus;
+
   showActionTooltip(event: MouseEvent, action: string): void {
     const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
-
-    // Posicionar el tooltip centrado sobre el botón (8px arriba)
     const x = rect.left + rect.width / 2;
     const y = rect.top - 8;
-
     this.tooltipPosition.set({ x, y });
     this.activeTooltip.set(action);
   }
@@ -44,7 +44,6 @@ export class OrderCardComponent {
     this.activeTooltip.set(null);
   }
 
-  // Resto de métodos (isUrgent, getAddressDisplay, etc.) sin cambios...
   get isUrgent(): boolean {
     const desired = this.order().desiredDeliveryTimeUtc;
     if (!desired) return false;
@@ -55,21 +54,7 @@ export class OrderCardComponent {
   }
 
   getAddressDisplay(): string {
-    const addr = this.order().deliveryAddress;
-    if (typeof addr === 'string') return addr;
-    if (addr && typeof addr === 'object') {
-      const parts = [
-        addr.mainStreet,
-        addr.street1,
-        addr.street2,
-        addr.houseNumber,
-        addr.apartmentNumber,
-        addr.city,
-        addr.municipality,
-      ].filter((p) => p);
-      return parts.join(', ');
-    }
-    return '';
+    return this.order().deliveryAddress || '';
   }
 
   getDeliveryTimeDisplay(): string {

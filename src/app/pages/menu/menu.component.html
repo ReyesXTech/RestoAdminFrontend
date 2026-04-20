@@ -22,11 +22,11 @@
           </div>
           <div class="exchange-rates">
             <span class="exchange-label">USD</span>
-            <span class="exchange-value">${{ exchangeRate().usdToCup }}</span>
+            <span class="exchange-value">${{ exchangeRate()?.usdToCup ?? '—' }}</span>
           </div>
           <div class="exchange-rates">
             <span class="exchange-label">EUR</span>
-            <span class="exchange-value">${{ exchangeRate().eurToCup }}</span>
+            <span class="exchange-value">${{ exchangeRate()?.eurToCup ?? '—' }}</span>
           </div>
           <button (click)="isEditingRate.set(true)" class="edit-btn" title="Editar tasas">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -84,6 +84,7 @@
       </svg>
       <input
         [(ngModel)]="searchText"
+        (ngModelChange)="onSearchInput()"
         type="text"
         placeholder="Buscar por nombre..."
         class="search-input"
@@ -92,7 +93,7 @@
     <div class="search-filters">
       <div class="filter-group">
         <label>Estado</label>
-        <select [(ngModel)]="searchStatus" class="filter-select">
+        <select [(ngModel)]="searchStatus" (ngModelChange)="onStatusChange()" class="filter-select">
           <option value="all">Todos</option>
           <option value="active">Activos</option>
           <option value="inactive">Agotados</option>
@@ -100,10 +101,15 @@
       </div>
       <div class="filter-group">
         <label>Categoría</label>
-        <select [(ngModel)]="searchCategory" class="filter-select">
-          <option value="all">Todas</option>
+        <select
+          [(ngModel)]="searchCategory"
+          (ngModelChange)="onCategoryChange()"
+          class="filter-select"
+        >
           @for (cat of categories; track cat) {
-            <option [value]="cat">{{ cat }}</option>
+            <option [value]="cat">
+              {{ cat === 'all' ? 'Todas' : getCategoryName(cat) }}
+            </option>
           }
         </select>
       </div>
@@ -111,7 +117,7 @@
   </div>
 
   <!-- Table -->
-  <div class="menu-table">
+  <div class="menu-table" (scroll)="onTableScroll($event)">
     <table>
       <thead>
         <tr>
@@ -124,7 +130,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (item of filteredMenuItems(); track item.id) {
+        @for (item of menuItems(); track item.id) {
           <tr class="group" (click)="openEditModal(item)">
             <td>
               <div class="product-image">
@@ -141,20 +147,18 @@
             </td>
             <td>
               <div class="product-name">{{ item.name }}</div>
-
               <div class="product-ingredients">
                 Ingredientes: <span>{{ item.detailedDescription || 'No especificados' }}</span>
               </div>
             </td>
-
             <td>
-              <span class="category-badge">{{ getCategoryName(item.category) }}</span>
+              <span class="category-badge">{{ item.category }}</span>
             </td>
-
-            <td class="price">
-              {{ item.price.amount | currency: item.price.currency }}
+            <td>
+              <span class="price">
+                {{ item.priceAmount | number: '1.2-2' }} {{ item.priceCurrency }}</span
+              >
             </td>
-
             <td>
               <button
                 (click)="$event.stopPropagation(); toggleAvailability(item)"
@@ -200,14 +204,30 @@
           </tr>
         }
 
-        @if (filteredMenuItems().length === 0) {
+        @if (menuItems().length === 0 && !loading()) {
           <tr>
-            <td colspan="6" class="empty-state">
-              @if (menuItems().length === 0) {
-                No hay platillos en el menú.
-              } @else {
-                No se encontraron resultados para tu búsqueda.
-              }
+            <td colspan="6" class="empty-state">No hay productos en el menú.</td>
+          </tr>
+        }
+
+        @if (loading()) {
+          <tr>
+            <td colspan="6" class="loading-indicator-cell">
+              <div class="loading-indicator">
+                <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="31.4 31.4">
+                    <animateTransform
+                      attributeName="transform"
+                      type="rotate"
+                      from="0 12 12"
+                      to="360 12 12"
+                      dur="1s"
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                </svg>
+                <span>Cargando productos...</span>
+              </div>
             </td>
           </tr>
         }
@@ -262,10 +282,10 @@
         </div>
 
         <div class="form-group">
-          <label>Descripción</label>
+          <label>Descripción Detallada</label>
           <textarea
-            [(ngModel)]="formDescription"
-            name="description"
+            [(ngModel)]="formDetailedDescription"
+            name="detailedDescription"
             rows="2"
             placeholder="Breve descripción del plato..."
           ></textarea>
@@ -276,16 +296,31 @@
             <div>
               <label>Categoría</label>
               <select [(ngModel)]="formCategory" name="category">
-                @for (cat of categories; track cat) {
-                  <option [value]="cat">{{ cat }}</option>
+                @for (cat of allCategories; track cat) {
+                  <option [value]="cat">{{ getCategoryName(cat) }}</option>
                 }
               </select>
             </div>
             <div>
-              <label>Precio ($)</label>
-              <input [(ngModel)]="formPriceAmount" name="price" type="number" min="0" step="1" />
+              <label>Precio</label>
+              <input
+                [(ngModel)]="formPriceAmount"
+                name="priceAmount"
+                type="number"
+                min="0"
+                step="1"
+              />
             </div>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label>Moneda</label>
+          <select [(ngModel)]="formPriceCurrency" name="currency">
+            <option [value]="Currency.CUP">CUP</option>
+            <option [value]="Currency.USD">USD</option>
+            <option [value]="Currency.EUR">EUR</option>
+          </select>
         </div>
 
         <div class="checkbox-group">

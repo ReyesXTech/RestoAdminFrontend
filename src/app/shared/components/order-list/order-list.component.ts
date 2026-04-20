@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Order } from '../../../models/models';
+import { OrderListItemDto } from '../../../models';
 import { OrderCardComponent } from '../order-card/order-card.component';
 
 @Component({
@@ -11,18 +11,20 @@ import { OrderCardComponent } from '../order-card/order-card.component';
   styleUrls: ['./order-list.component.scss'],
 })
 export class OrderListComponent {
-  // Inputs
   type = input.required<'pendientes' | 'listos'>();
-  orders = input.required<Order[]>();
+  orders = input.required<OrderListItemDto[]>();
+  loading = input<boolean>(false);
   previewEnabled = input<boolean>(false);
   currentTime = input<Date>(new Date());
   hidden = input<boolean>(false);
 
-  // Outputs
-  viewOrder = output<Order>();
+  viewOrder = output<OrderListItemDto>();
   markReady = output<string>();
-  cancelOrder = output<Order>();
+  cancelOrder = output<OrderListItemDto>();
   restoreToPending = output<string>();
+
+  // 🆕 Output para scroll
+  scrollEvent = output<Event>();
 
   get listTitle(): string {
     return this.type() === 'pendientes' ? 'PENDIENTES' : 'LISTOS';
@@ -34,9 +36,7 @@ export class OrderListComponent {
       : 'Ordenado por hora de entrega';
   }
 
-  get iconSvg(): string {
-    return this.type() === 'pendientes'
-      ? 'pulse-dot' // CSS class for pending
-      : 'list-icon'; // SVG icon for ready
+  onScroll(event: Event): void {
+    this.scrollEvent.emit(event);
   }
 }

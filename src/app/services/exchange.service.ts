@@ -1,94 +1,45 @@
-// ==========================================
-// EXCHANGE SERVICE
-// ==========================================
-// Servicio para gestión de tasas de cambio
-// Endpoints relacionados:
-// - GET /api/exchange-rates (obtener tasas)
-// - PUT /api/exchange-rates (actualizar tasas)
-
-import { Injectable, signal } from '@angular/core';
-import { ExchangeRate } from '../models/models';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { ExchangeRateResponse, UpsertTodayExchangeRateCommand } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ExchangeService {
-  // Estado de tasas de cambio
-  private _exchangeRate = signal<ExchangeRate>({
-    usdToCup: 280,
-    eurToCup: 300,
-    lastUpdatedUtc: new Date().toISOString(),
-  });
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
 
+  private _exchangeRate = signal<ExchangeRateResponse | null>(null);
   readonly exchangeRate = this._exchangeRate.asReadonly();
 
   constructor() {
-    // Cargar tasas desde localStorage (MOCK)
-    // FUTURO: this.loadExchangeRate()
     this.loadExchangeRate();
   }
 
-  /**
-   * Actualiza las tasas de cambio
-   * MOCK: Reemplazar con llamada HTTP PUT /api/exchange-rates
-   */
-  updateExchangeRate(usdToCup: number, eurToCup: number): void {
-    // FUTURO:
-    // return this.http.put(`${this.apiUrl}/exchange-rates`, { usd, eur });
-
-    this._exchangeRate.set({
-      usdToCup,
-      eurToCup,
-      lastUpdatedUtc: new Date().toISOString(),
-    });
-    this.persistExchangeRate();
-  }
-
-  /**
-   * Carga las tasas de cambio desde localStorage
-   * MOCK: Reemplazar con llamada HTTP GET /api/exchange-rates
-   */
   loadExchangeRate(): void {
-    // FUTURO:
-    // this.http.get<ExchangeRate>(`${this.apiUrl}/exchange-rates`).subscribe(rate => {
-    //   this._exchangeRate.set(rate);
-    // });
-
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('exchangeRate');
-      if (stored) {
-        this._exchangeRate.set(JSON.parse(stored));
-      }
-    }
+    firstValueFrom(this.http.get<ExchangeRateResponse>(`${this.apiUrl}/exchangerates/current`))
+      .then((rate) => this._exchangeRate.set(rate))
+      .catch((err) => console.error('Error loading exchange rate', err));
   }
 
-  /**
-   * Persiste las tasas de cambio en localStorage
-   */
-  private persistExchangeRate(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('exchangeRate', JSON.stringify(this._exchangeRate()));
-    }
+  updateExchangeRate(command: UpsertTodayExchangeRateCommand): void {
+    firstValueFrom(this.http.put(`${this.apiUrl}/exchangerates/current`, command))
+      .then(() => this.loadExchangeRate())
+      .catch((err) => console.error('Error updating exchange rate', err));
   }
 
-  /**
-   * Obtiene el valor de una moneda específica
-   */
   getRate(currency: 'usd' | 'eur'): number {
-    return currency === 'usd' ? this._exchangeRate().usdToCup : this._exchangeRate().eurToCup;
+    const rate = this._exchangeRate();
+    if (!rate) return 0;
+    return currency === 'usd' ? rate.usdToCup : rate.eurToCup;
   }
 
-  /**
-   * Convierte un monto de la moneda local a una moneda extranjera
-   */
   convertToLocal(currency: 'usd' | 'eur', amount: number): number {
-    const rate = this.getRate(currency);
-    return amount * rate;
+    return amount * this.getRate(currency);
   }
 
-  /**
-   * Convierte un monto de la moneda local desde una moneda extranjera
-   */
   convertFromLocal(currency: 'usd' | 'eur', amount: number): number {
     const rate = this.getRate(currency);
-    return amount / rate;
+    return rate ? amount / rate : 0;
   }
 }

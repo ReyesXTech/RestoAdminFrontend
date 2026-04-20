@@ -1,0 +1,249 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-title">
+        <span class="header-icon">📦</span>
+        <h2>Nuevo Pedido</h2>
+      </div>
+      <button class="close-btn" (click)="onClose()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
+        <!-- Datos del cliente -->
+        <section class="form-section">
+          <h3 class="section-title">
+            <span class="section-icon">👤</span>
+            Cliente
+          </h3>
+          <div class="form-row">
+            <label for="clientName">
+              <span class="label-icon">📋</span>
+              Nombre completo *
+            </label>
+            <input
+              id="clientName"
+              formControlName="clientName"
+              type="text"
+              placeholder="Ej: Juan Pérez García"
+            />
+          </div>
+
+          <div class="form-row">
+            <label for="phone">
+              <span class="label-icon">📱</span>
+              Teléfono *
+            </label>
+            <div class="phone-input-group">
+              <select
+                formControlName="phoneCountryCode"
+                class="country-code-select"
+                id="countryCode"
+              >
+                @for (cc of countryCodes; track cc.code) {
+                  <option [value]="cc.code">{{ cc.code }} {{ cc.name }}</option>
+                }
+              </select>
+              <input
+                id="phoneNational"
+                formControlName="phoneNationalNumber"
+                type="tel"
+                placeholder="Número local"
+                class="phone-number-input"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Dirección -->
+        <section class="form-section">
+          <h3 class="section-title">
+            <span class="section-icon">📍</span>
+            Dirección de entrega
+          </h3>
+
+          <div class="form-row-group">
+            <div class="form-row form-row-half">
+              <label for="city">
+                <span class="label-icon">🏙️</span>
+                Ciudad *
+              </label>
+              <input id="city" formControlName="city" type="text" placeholder="Ej: La Habana" />
+            </div>
+            <div class="form-row form-row-half">
+              <label for="municipality">
+                <span class="label-icon">🏛️</span>
+                Municipio *
+              </label>
+              <input
+                id="municipality"
+                formControlName="municipality"
+                type="text"
+                placeholder="Ej: Plaza"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="mainStreet">
+              <span class="label-icon">🛣️</span>
+              Calle principal *
+            </label>
+            <input
+              id="mainStreet"
+              formControlName="mainStreet"
+              type="text"
+              placeholder="Ej: Calle 23"
+            />
+          </div>
+
+          <div class="form-row-group">
+            <div class="form-row form-row-half">
+              <label for="street1">
+                <span class="label-icon">↔️</span>
+                Entre calle 1 *
+              </label>
+              <input id="street1" formControlName="street1" type="text" placeholder="Ej: L" />
+            </div>
+            <div class="form-row form-row-half">
+              <label for="street2">
+                <span class="label-icon">↔️</span>
+                Entre calle 2
+              </label>
+              <input id="street2" formControlName="street2" type="text" placeholder="Ej: M" />
+            </div>
+          </div>
+
+          <div class="form-row-group">
+            <div class="form-row form-row-half">
+              <label for="houseNumber">
+                <span class="label-icon">🏠</span>
+                Número de casa *
+              </label>
+              <input
+                id="houseNumber"
+                formControlName="houseNumber"
+                type="text"
+                placeholder="Ej: 456"
+              />
+            </div>
+            <div class="form-row form-row-half">
+              <label for="apartmentNumber">
+                <span class="label-icon">🚪</span>
+                Apartamento
+              </label>
+              <input
+                id="apartmentNumber"
+                formControlName="apartmentNumber"
+                type="text"
+                placeholder="Ej: 3B"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="additionalInfo">
+              <span class="label-icon">📝</span>
+              Información adicional
+            </label>
+            <textarea
+              id="additionalInfo"
+              formControlName="additionalInfo"
+              placeholder="Punto de referencia, color de la casa, etc."
+              rows="3"
+            ></textarea>
+          </div>
+        </section>
+
+        <!-- Tiempo de entrega -->
+        <section class="form-section">
+          <h3 class="section-title">
+            <span class="section-icon">⏰</span>
+            Entrega deseada
+          </h3>
+          <div class="form-row">
+            <label for="deliveryTime">
+              <span class="label-icon">📅</span>
+              Fecha y hora *
+            </label>
+            <input
+              id="deliveryTime"
+              formControlName="desiredDeliveryTimeUtc"
+              type="datetime-local"
+            />
+          </div>
+        </section>
+
+        <!-- Productos -->
+        <section class="form-section">
+          <h3 class="section-title">
+            <span class="section-icon">🛒</span>
+            Productos
+          </h3>
+
+          <div class="form-row">
+            <label for="categoryFilter">
+              <span class="label-icon">🔍</span>
+              Filtrar por categoría
+            </label>
+            <select
+              id="categoryFilter"
+              (change)="onCategoryChange($any($event.target).value)"
+              class="category-select"
+            >
+              <option value="all">Todas las categorías</option>
+              @for (cat of categories; track cat.value) {
+                <option [value]="cat.value">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div formArrayName="items" class="items-container">
+            @for (item of itemsArray.controls; track $index) {
+              <div class="item-row" [formGroupName]="$index">
+                <div class="item-select-wrapper">
+                  <select formControlName="productId" class="product-select">
+                    <option value="">Seleccione un producto</option>
+                    @for (prod of productsByCategory(); track prod.id) {
+                      <option [value]="prod.id">
+                        {{ prod.name }} - {{ prod.priceAmount | currency }}
+                      </option>
+                    }
+                  </select>
+                </div>
+                <input
+                  formControlName="quantity"
+                  type="number"
+                  min="1"
+                  class="quantity-input"
+                  placeholder="Cant."
+                />
+                <button
+                  type="button"
+                  class="remove-item"
+                  (click)="removeItem($index)"
+                  aria-label="Eliminar producto"
+                >
+                  🗑️
+                </button>
+              </div>
+            }
+          </div>
+
+          <button type="button" class="add-item" (click)="addItem()">
+            <span class="add-icon">+</span>
+            Agregar producto
+          </button>
+        </section>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="onClose()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="orderForm.invalid">
+            <span class="btn-icon">✓</span>
+            Crear Pedido
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

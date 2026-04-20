@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <div class="list-content">
+  <div class="list-content" (scroll)="onScroll($event)">
     @for (order of orders(); track order.id) {
       <app-order-card
         [order]="order"
@@ -35,7 +35,26 @@
       />
     }
 
-    @if (orders().length === 0) {
+    <!-- Indicador de carga mientras se esperan datos -->
+    @if (loading() && orders().length === 0) {
+      <div class="loading-indicator">
+        <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="31.4 31.4">
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from="0 12 12"
+              to="360 12 12"
+              dur="1s"
+              repeatCount="indefinite"
+            />
+          </circle>
+        </svg>
+        <span>Cargando pedidos...</span>
+      </div>
+    }
+
+    @if (orders().length === 0 && !loading()) {
       <div class="empty-state">
         <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path

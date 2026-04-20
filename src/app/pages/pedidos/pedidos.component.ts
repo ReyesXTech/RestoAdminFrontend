@@ -1,135 +1,150 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
 import { ClipboardService } from '../../services/clipboard.service';
 import { ToastService } from '../../services/toast.service';
 import { ThemeService } from '../../services/theme.service';
 import { TimeService } from '../../services/time.service';
-import { Order, OrderStatus } from '../../models/models';
+import { OrderDetailResponse, OrderListItemDto } from '../../models';
 import { PendingReadyOrderDetailModalComponent } from '../../shared/components/order-modals/pending-ready-order-detail-modal.component';
 import { IsUrgentPipe } from '../../pipes/is-urgent.pipe';
 import { OrderListComponent } from '../../shared/components/order-list/order-list.component';
+import { CreateOrderModalComponent } from '../../shared/components/create-order-modal/create-order-modal.component';
 
 @Component({
   selector: 'app-pedidos',
   standalone: true,
   imports: [
-    FormsModule,
     CommonModule,
     PendingReadyOrderDetailModalComponent,
     IsUrgentPipe,
     OrderListComponent,
+    CreateOrderModalComponent,
   ],
   templateUrl: './pedidos.component.html',
   styleUrls: ['./pedidos.component.scss'],
 })
 export class PedidosComponent implements OnInit, OnDestroy {
-  private dataService = inject(DataService);
+  public dataService = inject(DataService);
   private clipboardService = inject(ClipboardService);
   public toastService = inject(ToastService);
   private themeService = inject(ThemeService);
   readonly currentTime = inject(TimeService).currentTime;
 
-  // Usar directamente las signals computadas del DataService
   readonly pendientes = this.dataService.pendingOrders;
-  readonly listos = this.dataService.listosOrders;
+  readonly listos = this.dataService.listos;
   readonly previewEnabled = this.themeService.previewEnabled;
 
-  // View mode: 'both' | 'pendientes' | 'listos'
   viewMode = signal<'both' | 'pendientes' | 'listos'>('both');
+  selectedOrder = signal<OrderDetailResponse | null>(null);
+  showCancelModal = signal(false);
+  orderToCancel = signal<OrderListItemDto | null>(null);
+  showCreateModal = signal(false);
 
-  selectedOrder = signal<Order | null>(null);
+  openCreateModal() {
+    this.showCreateModal.set(true);
+  }
+  closeCreateModal() {
+    this.showCreateModal.set(false);
+  }
+  onOrderCreated() {
+    this.closeCreateModal();
+    this.loadOrders();
+  }
 
-  // Set view mode
+  ngOnInit(): void {
+    this.toastService.clear();
+    this.loadOrders();
+  }
+
+  ngOnDestroy(): void {
+    this.toastService.clear();
+  }
+
+  private loadOrders(): void {
+    this.dataService.loadPendingOrders();
+    this.dataService.loadReadyOrders();
+  }
+
   setViewMode(mode: 'both' | 'pendientes' | 'listos'): void {
     this.viewMode.set(mode);
   }
 
-  ngOnInit(): void {
-    // Clear toasts on init
-    this.toastService.clear();
-  }
+  // 🆕 Manejar scroll infinito
+  onListScroll(event: Event, type: 'pendientes' | 'listos'): void {
+    const element = event.target as HTMLElement;
+    const threshold = 100; // px antes del final
+    const nearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
 
-  ngOnDestroy(): void {
-    // Clear toasts when component is destroyed
-    this.toastService.clear();
-  }
+    if (!nearBottom) return;
 
-  showCancelModal = signal(false);
-  orderToCancel = signal<Order | null>(null);
-
-  updateStatus(id: string, status: OrderStatus, confirm = false): void {
-    // Handle restore from ready to pending (no confirmation needed)
-    if (status === OrderStatus.Pending) {
-      this.dataService.updateOrderStatus(id, OrderStatus.Pending);
-      const current = this.selectedOrder();
-      if (current && current.id === id) {
-        this.selectedOrder.set({
-          ...current,
-          status: OrderStatus.Pending,
-          readyTimeUtc: undefined,
-        });
-      }
-      this.toastService.show('Pedido restaurado a pendientes', 'success');
-      return;
-    }
-
-    // Handle cancellation (requires confirmation)
-    if (confirm) {
-      const order = this.dataService.orders().find((o) => o.id === id);
-      if (order) {
-        this.orderToCancel.set(order);
-        this.showCancelModal.set(true);
-      }
-      return;
-    }
-
-    // Capture ready time when marking as ready
-    const readyTimeUtc = status === OrderStatus.Ready ? new Date().toISOString() : undefined;
-    this.dataService.updateOrderStatus(id, status, readyTimeUtc);
-
-    const current = this.selectedOrder();
-    if (current && current.id === id) {
-      this.selectedOrder.set({ ...current, status, readyTimeUtc });
+    if (
+      type === 'pendientes' &&
+      this.dataService.pendingHasMore() &&
+      !this.dataService.pendingLoading()
+    ) {
+      this.dataService.loadNextPendingPage();
+    } else if (
+      type === 'listos' &&
+      this.dataService.readyHasMore() &&
+      !this.dataService.readyLoading()
+    ) {
+      this.dataService.loadNextReadyPage();
     }
   }
 
-  confirmCancel(): void {
-    const order = this.orderToCancel();
-    if (order) {
-      this.dataService.updateOrderStatus(order.id, OrderStatus.Cancelled);
-      this.toastService.show('Pedido cancelado exitosamente', 'success');
-      this.showCancelModal.set(false);
-      this.orderToCancel.set(null);
+  async viewOrder(order: OrderListItemDto): Promise<void> {
+    try {
+      const fullOrder = await this.dataService.getOrderById(order.id);
+      this.selectedOrder.set(fullOrder);
+    } catch {
+      this.toastService.show('Error al cargar los detalles del pedido', 'error');
     }
-  }
-
-  closeCancelModal(): void {
-    this.showCancelModal.set(false);
-    this.orderToCancel.set(null);
-  }
-
-  viewOrder(order: Order): void {
-    this.selectedOrder.set(order);
   }
 
   closeDetail(): void {
     this.selectedOrder.set(null);
   }
 
-  // Methods for OrderListComponent
-  onMarkReady(id: string): void {
-    this.updateStatus(id, OrderStatus.Ready);
+  async onMarkReady(orderId: string): Promise<void> {
+    try {
+      await this.dataService.markAsReady(orderId);
+      this.toastService.show('Pedido marcado como listo', 'success');
+    } catch {
+      this.toastService.show('Error al marcar como listo', 'error');
+    }
   }
 
-  onCancelOrder(order: Order): void {
+  async onRestoreToPending(orderId: string): Promise<void> {
+    try {
+      await this.dataService.revertToPending(orderId);
+      this.toastService.show('Pedido restaurado a pendiente', 'success');
+    } catch {
+      this.toastService.show('Error al restaurar pedido', 'error');
+    }
+  }
+
+  onCancelOrder(order: OrderListItemDto): void {
     this.orderToCancel.set(order);
     this.showCancelModal.set(true);
   }
 
-  onRestoreToPending(id: string): void {
-    this.updateStatus(id, OrderStatus.Pending);
+  async confirmCancel(): Promise<void> {
+    const order = this.orderToCancel();
+    if (order) {
+      try {
+        await this.dataService.cancelOrder(order.id);
+        this.toastService.show('Pedido cancelado exitosamente', 'success');
+        this.closeCancelModal();
+      } catch {
+        this.toastService.show('Error al cancelar pedido', 'error');
+      }
+    }
+  }
+
+  closeCancelModal(): void {
+    this.showCancelModal.set(false);
+    this.orderToCancel.set(null);
   }
 
   copyPhone(phone: string): void {
