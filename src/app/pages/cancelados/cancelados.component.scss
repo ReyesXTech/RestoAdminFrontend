@@ -77,6 +77,7 @@
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 
   thead {
     position: sticky;
@@ -92,6 +93,32 @@ table {
       letter-spacing: 0.1em;
       text-align: left;
       border-bottom: 1px solid color(red-100);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      // Definir anchos porcentuales (total = 100%)
+      &:nth-child(1) {
+        // Cliente / Dirección
+        width: 37%; // Más espacio para nombre y dirección
+      }
+      &:nth-child(2) {
+        // Teléfono
+        width: 15%;
+      }
+      &:nth-child(3) {
+        // Fecha y Hora
+        width: 15%;
+      }
+      //   &:nth-child(4) {
+      // Entrega Deseada
+      //     width: 15%;
+      //   }
+      &:nth-child(5) {
+        // Total
+        width: 10%;
+        text-align: right;
+      }
     }
   }
 
@@ -111,12 +138,42 @@ table {
 
       td {
         padding: 1rem 1.5rem;
+        vertical-align: middle;
+        box-sizing: border-box;
+        overflow: hidden;
+
+        // Aplicar los mismos anchos que en thead
+        &:nth-child(1) {
+          // Cliente / Dirección
+          width: 37%;
+        }
+        &:nth-child(2) {
+          // Teléfono
+          width: 15%;
+        }
+        &:nth-child(3) {
+          // Fecha y Hora
+          width: 15%;
+        }
+        //&:nth-child(4) {
+        // Entrega Deseada
+        //  width: 15%;
+        // }
+        &:nth-child(5) {
+          // Total
+          width: 10%;
+          text-align: right;
+        }
 
         .client-name {
           font-size: 1rem;
           font-weight: 700;
           color: var(--text-primary);
           @include transition(color, 150ms);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-bottom: 2px;
         }
 
         .address {
@@ -125,6 +182,14 @@ table {
           font-weight: 500;
           text-transform: none;
           letter-spacing: normal;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          // Efecto de desvanecimiento en el borde derecho
+          position: relative;
+          mask-image: linear-gradient(to right, black 85%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
         }
 
         .phone-copy {
@@ -305,6 +370,77 @@ table {
   }
 }
 
+// Breakpoint 1: 1350px → Ajustar anchos sin activar scroll
+@media (max-width: 1350px) {
+  table {
+    thead th,
+    tbody td {
+      // Reducir padding para ganar espacio
+      padding-left: 1rem;
+      padding-right: 1rem;
+
+      // Redistribución de anchos (total = 100%)
+      &:nth-child(1) {
+        width: 32%;
+      } // Cliente/Dirección (antes 37%)
+      &:nth-child(2) {
+        width: 14%;
+      } // Teléfono (antes 15%)
+      &:nth-child(3) {
+        width: 14%;
+      } // Fecha y Hora (antes 15%)
+      &:nth-child(4) {
+        width: 14%;
+      } // Entrega Deseada (¡nuevo ancho!)
+      &:nth-child(5) {
+        width: 10%;
+      } // Total (se mantiene)
+    }
+  }
+}
+
+// Breakpoint 2: 1200px → Activar scroll horizontal
+@media (max-width: 1200px) {
+  .cancelados-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    table {
+      min-width: 890px; // Ajusta según necesidad
+      // Volver a los anchos originales (o unos intermedios) para que el scroll tenga sentido
+      thead th,
+      tbody td {
+        &:nth-child(1) {
+          width: 25%;
+        }
+        &:nth-child(2) {
+          width: 15%;
+        }
+        &:nth-child(3) {
+          width: 15%;
+        }
+        &:nth-child(4) {
+          width: 13%;
+        } // Valor fijo para consistencia
+        &:nth-child(5) {
+          width: 10%;
+        }
+      }
+    }
+  }
+}
+
+// Opcional: reducir más el padding en móviles pequeños
+@media (max-width: 890px) {
+  table {
+    thead th,
+    tbody td {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+  }
+}
+/*
 // Responsive
 @media (max-width: 992px) {
   .cancelados-header {
@@ -323,7 +459,7 @@ table {
       min-width: 600px;
     }
   }
-}
+}*/
 
 // ==========================================
 // SUAVIZAR APARICIÓN DE LAS FILAS (evita flicker)

@@ -127,10 +127,14 @@
                 </td>
                 <td>
                   <span
-                    class="address"
+                    title="Click para ver dirección completa"
+                    class="address address-cell"
                     [class.address-cancelled]="order.status === OrderStatus.Cancelled"
                     [class.address-ready]="order.status === OrderStatus.Ready"
                     [class.address-pending]="order.status === OrderStatus.Pending"
+                    (click)="
+                      $event.stopPropagation(); toggleAddressTooltip($event, order.deliveryAddress)
+                    "
                   >
                     {{ order.deliveryAddress }}
                   </span>
@@ -283,5 +287,20 @@
       [isUrgent]="false"
       (close)="closeDetail()"
     />
+  }
+
+  <!-- Address Tooltip -->
+  @if (addressTooltipVisible()) {
+    <div
+      class="address-tooltip-fixed"
+      [style.left.px]="addressTooltipPosition().x"
+      [style.top.px]="addressTooltipPosition().y"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="tooltip-content">
+        {{ currentTooltipAddress() }}
+      </div>
+      <button class="close-tooltip" (click)="closeAddressTooltip()">✕</button>
+    </div>
   }
 </div>

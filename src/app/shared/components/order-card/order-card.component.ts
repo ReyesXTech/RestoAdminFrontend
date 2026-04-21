@@ -2,6 +2,7 @@ import { Component, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderListItemDto, OrderStatus } from '../../../models';
 import { ClipboardService } from '../../../services/clipboard.service';
+import { TooltipService } from '../../../services/tooltip.service';
 
 @Component({
   selector: 'app-order-card',
@@ -12,6 +13,7 @@ import { ClipboardService } from '../../../services/clipboard.service';
 })
 export class OrderCardComponent {
   private clipboardService = inject(ClipboardService);
+  private tooltipService = inject(TooltipService);
 
   order = input.required<OrderListItemDto>();
   previewEnabled = input<boolean>(false);
@@ -23,10 +25,7 @@ export class OrderCardComponent {
   markReady = output<string>();
   cancelOrder = output<OrderListItemDto>();
   restoreToPending = output<string>();
-
-  // Tooltip state
-  activeTooltip = signal<string | null>(null);
-  tooltipPosition = signal({ x: 0, y: 0 });
+  editOrder = output<OrderListItemDto>();
 
   // Exponer enum a la plantilla
   readonly OrderStatus = OrderStatus;
@@ -36,12 +35,18 @@ export class OrderCardComponent {
     const rect = button.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top - 8;
-    this.tooltipPosition.set({ x, y });
-    this.activeTooltip.set(action);
+
+    let text = '';
+    if (action === 'ready') text = 'Listo';
+    else if (action === 'restore') text = 'Restaurar';
+    else if (action === 'cancel') text = 'Cancelar';
+    else if (action === 'edit') text = 'Editar';
+
+    this.tooltipService.show(text, x, y);
   }
 
   hideActionTooltip(): void {
-    this.activeTooltip.set(null);
+    this.tooltipService.hide();
   }
 
   get isUrgent(): boolean {
@@ -80,6 +85,10 @@ export class OrderCardComponent {
 
   onRestoreToPending(): void {
     this.restoreToPending.emit(this.order().id);
+  }
+
+  onEditOrder(): void {
+    this.editOrder.emit(this.order());
   }
 
   copyPhone(phone: string): void {

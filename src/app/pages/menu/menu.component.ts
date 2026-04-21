@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { DataService } from '../../services/data.service';
 import { ProductCategory, ProductResponse, Currency } from '../../models';
+import { TooltipService } from '../../services/tooltip.service';
 
 @Component({
   selector: 'app-menu',
@@ -14,6 +15,7 @@ import { ProductCategory, ProductResponse, Currency } from '../../models';
 })
 export class MenuComponent implements OnInit, OnDestroy {
   private dataService = inject(DataService);
+  private tooltipService = inject(TooltipService);
 
   readonly menuItems = this.dataService.menuItems;
   readonly loading = this.dataService.productsLoading;
@@ -323,12 +325,14 @@ export class MenuComponent implements OnInit, OnDestroy {
   showActionTooltip(event: MouseEvent, action: 'edit' | 'delete'): void {
     const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
-    this.actionTooltipPosition.set({ x: rect.left + rect.width / 2, y: rect.top - 8 });
-    this.activeActionTooltip.set(action);
+    const x = rect.left + rect.width / 2;
+    const y = rect.top - 8;
+    const text = action === 'edit' ? 'Editar' : 'Eliminar';
+    this.tooltipService.show(text, x, y);
   }
 
   hideActionTooltip(): void {
-    this.activeActionTooltip.set(null);
+    this.tooltipService.hide();
   }
 
   showPreview(event: MouseEvent, item: ProductResponse): void {

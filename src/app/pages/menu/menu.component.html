@@ -374,15 +374,3 @@
     </div>
   </div>
 }
-
-<!-- Tooltip fijo para acciones de tabla -->
-@if (activeActionTooltip(); as tooltip) {
-  <div
-    class="action-tooltip-fixed"
-    [style.left.px]="actionTooltipPosition().x"
-    [style.top.px]="actionTooltipPosition().y"
-    [class.visible]="true"
-  >
-    {{ tooltip === 'edit' ? 'Editar' : 'Eliminar' }}
-  </div>
-}

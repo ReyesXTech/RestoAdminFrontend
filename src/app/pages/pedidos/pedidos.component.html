@@ -73,6 +73,7 @@
       (markReady)="onMarkReady($event)"
       (cancelOrder)="onCancelOrder($event)"
       (scrollEvent)="onListScroll($event, 'pendientes')"
+      (editOrder)="onEditOrder($event)"
     />
 
     <!-- List: Listos -->
@@ -171,5 +172,12 @@
         </div>
       </div>
     </div>
+  }
+  @if (showEditModal() && editingOrderId()) {
+    <app-edit-order-modal
+      [orderId]="editingOrderId()!"
+      (close)="closeEditModal()"
+      (updated)="onOrderUpdated()"
+    />
   }
 </div>

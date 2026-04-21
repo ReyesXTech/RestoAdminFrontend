@@ -174,43 +174,49 @@
           </div>
         </section>
 
-        <!-- Productos -->
+        <!-- Reemplazar la sección de productos completa -->
         <section class="form-section">
           <h3 class="section-title">
             <span class="section-icon">🛒</span>
             Productos
           </h3>
 
-          <div class="form-row">
-            <label for="categoryFilter">
-              <span class="label-icon">🔍</span>
-              Filtrar por categoría
-            </label>
-            <select
-              id="categoryFilter"
-              (change)="onCategoryChange($any($event.target).value)"
-              class="category-select"
-            >
-              <option value="all">Todas las categorías</option>
-              @for (cat of categories; track cat.value) {
-                <option [value]="cat.value">{{ cat.name }}</option>
-              }
-            </select>
-          </div>
-
           <div formArrayName="items" class="items-container">
-            @for (item of itemsArray.controls; track $index) {
-              <div class="item-row" [formGroupName]="$index">
-                <div class="item-select-wrapper">
-                  <select formControlName="productId" class="product-select">
-                    <option value="">Seleccione un producto</option>
-                    @for (prod of productsByCategory(); track prod.id) {
-                      <option [value]="prod.id">
-                        {{ prod.name }} - {{ prod.priceAmount | currency }}
-                      </option>
-                    }
-                  </select>
+            @for (item of itemsArray.controls; track $index; let i = $index) {
+              <div class="item-row" [formGroupName]="i">
+                <!-- Combobox personalizado -->
+                <div class="combobox-wrapper">
+                  <input
+                    type="text"
+                    formControlName="searchControl"
+                    placeholder="Buscar producto..."
+                    class="combobox-input"
+                    (focus)="onComboboxFocus(i)"
+                    (blur)="onComboboxBlur(i)"
+                    [attr.aria-owns]="'dropdown-' + i"
+                    autocomplete="off"
+                  />
+                  @if (isDropdownOpen(i)) {
+                    <div class="combobox-dropdown" [id]="'dropdown-' + i">
+                      @if (getFilteredOptions(i) | async; as options) {
+                        @for (product of options; track product.id) {
+                          <div
+                            class="combobox-option"
+                            (mousedown)="onProductSelected(i, product)"
+                            [class.selected]="item.get('productId')?.value === product.id"
+                          >
+                            <span class="product-name">{{ product.name }}</span>
+                            <span class="product-price">{{ product.priceAmount | currency }}</span>
+                          </div>
+                        }
+                        @if (options.length === 0) {
+                          <div class="combobox-no-results">No se encontraron productos</div>
+                        }
+                      }
+                    </div>
+                  }
                 </div>
+
                 <input
                   formControlName="quantity"
                   type="number"
@@ -221,7 +227,7 @@
                 <button
                   type="button"
                   class="remove-item"
-                  (click)="removeItem($index)"
+                  (click)="removeItem(i)"
                   aria-label="Eliminar producto"
                 >
                   🗑️

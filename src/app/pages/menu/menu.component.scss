@@ -397,7 +397,6 @@
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
 
-    // ⏳ Retraso para evitar flicker en cargas rápidas
     opacity: 0;
     animation: delayed-appear 0.01s 0.25s forwards;
 
@@ -417,23 +416,54 @@
   table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed; // Forzar anchos fijos
+
+    // Asegurar que el padding no expanda las celdas más allá de su ancho
+    th,
+    td {
+      box-sizing: border-box;
+      overflow: hidden;
+    }
 
     thead {
       border-bottom: 1px solid var(--border-light);
       background-color: var(--surface-muted);
 
       th {
-        padding: 1rem 1.5rem;
+        padding: 1rem 0.75rem;
         font-size: 0.6875rem;
         font-weight: 900;
         color: var(--text-secondary);
         text-align: left;
         text-transform: uppercase;
         letter-spacing: 0.1em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
 
-        &:last-child {
+        // Asignar anchos a los th (con clases)
+        &.col-photo {
+          width: 15%;
+        }
+
+        &.col-category {
+          width: 15%;
+        }
+
+        &.col-price {
+          width: 10%;
+        }
+
+        &.col-status {
+          width: 12%;
+        }
+
+        &.col-actions {
+          width: 8%;
           text-align: right;
         }
+
+        // El primer th (Nombre) no tiene clase, toma el resto automáticamente (≈50%)
       }
     }
 
@@ -459,11 +489,36 @@
         }
 
         td {
-          padding: 1rem 1.5rem;
+          padding: 0.75rem; // Padding reducido para ganar espacio
+          vertical-align: middle;
+
+          // Aplicar anchos a las celdas por índice (deben coincidir con los th)
+          &:nth-child(1) {
+            // Foto
+            width: 8%;
+          }
+          &:nth-child(3) {
+            // Categoría
+            width: 12%;
+          }
+          &:nth-child(4) {
+            // Precio
+            width: 10%;
+          }
+          &:nth-child(5) {
+            // Estado
+            width: 12%;
+          }
+          &:nth-child(6) {
+            // Acciones
+            width: 8%;
+            text-align: right;
+          }
+          // La columna 2 (Nombre) toma el resto automáticamente
 
           .product-image {
-            width: 3rem;
-            height: 3rem;
+            width: 2.5rem;
+            height: 2.5rem;
             border-radius: 0.5rem;
             background-color: var(--surface-muted);
             overflow: hidden;
@@ -489,10 +544,14 @@
           }
 
           .product-name {
-            font-size: 1rem;
+            font-size: 0.9375rem;
             font-weight: 700;
             color: var(--text-primary);
             @include transition(color, 150ms);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
           }
 
           .product-ingredients {
@@ -500,6 +559,15 @@
             color: var(--text-tertiary);
             font-weight: 500;
             text-transform: none;
+            line-height: 1.4;
+            // Limitar a 2 líneas con ellipsis
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
+            max-width: 100%;
 
             span {
               color: var(--text-secondary);
@@ -516,12 +584,14 @@
             color: color(indigo-700);
             border: 1px solid color(indigo-200);
             text-transform: uppercase;
+            white-space: nowrap;
           }
 
           .price {
-            font-size: 1rem;
+            font-size: 0.9375rem;
             font-weight: 600;
             color: var(--text-primary);
+            white-space: nowrap;
           }
 
           .status-badge {
@@ -532,6 +602,7 @@
             border: 1px solid;
             @include transition(all, 150ms);
             cursor: pointer;
+            white-space: nowrap;
 
             &.active {
               background-color: color(emerald-100);
@@ -557,7 +628,7 @@
           .actions {
             display: flex;
             justify-content: flex-end;
-            gap: 0.5rem;
+            gap: 0.25rem;
 
             .action-btn-wrapper {
               position: relative;
@@ -573,8 +644,8 @@
             }
 
             .action-btn {
-              width: 2rem;
-              height: 2rem;
+              width: 1.75rem;
+              height: 1.75rem;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -1210,7 +1281,7 @@
 }
 
 // Responsive
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   .menu-container {
     padding: 0.75rem;
   }
@@ -1270,7 +1341,7 @@
     -webkit-overflow-scrolling: touch;
 
     table {
-      min-width: 600px;
+      min-width: 900px;
     }
   }
 
@@ -1285,6 +1356,125 @@
   }
 }
 
+// NUEVA MEDIA QUERY PARA MÓVILES (hasta 768px)
+@media (max-width: 768px) {
+  .menu-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0.5rem; // más compacto
+
+    table {
+      min-width: 600px; // antes 900px, ahora más flexible
+      font-size: 0.8125rem; // ligeramente reducido
+    }
+
+    // Ocultar columna de foto en móviles para ganar espacio
+    th.col-photo,
+    td:first-child {
+      display: none;
+    }
+
+    // Ajustar anchos de columnas restantes
+    th {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.6rem;
+    }
+
+    td {
+      padding: 0.5rem;
+    }
+
+    // Nombre del producto (columna 2, antes sin clase) -> le damos clase implícita por posición
+    td:nth-child(2) {
+      width: 15%; // Nombre ocupa 35%
+    }
+    /*
+    // Categoría
+    th.col-category,
+    td:nth-child(3) {
+      width: 20%;
+    }*/
+
+    // Precio
+    th.col-price,
+    td:nth-child(4) {
+      width: 15%;
+    }
+
+    // Estado
+    th.col-status,
+    td:nth-child(5) {
+      width: 15%;
+    }
+
+    // Acciones
+    th.col-actions,
+    td:nth-child(6) {
+      width: 15%;
+      text-align: right;
+    }
+
+    // Hacer que el badge de categoría sea más pequeño
+    .category-badge {
+      font-size: 0.55rem;
+      padding: 0.2rem 0.4rem;
+    }
+
+    // Botones de acción más grandes para facilitar el toque
+    .action-btn {
+      width: 2rem;
+      height: 2rem;
+
+      svg {
+        width: 1.2rem;
+        height: 1.2rem;
+      }
+    }
+
+    // Nombre del producto: permitir que ocupe más espacio y se ajuste
+    .product-name {
+      font-size: 0.875rem;
+      white-space: nowrap; // Una sola línea
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-ingredients {
+      display: none; // Ocultamos ingredientes para ganar claridad
+    }
+
+    .price {
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      font-size: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      white-space: nowrap;
+    }
+  }
+
+  // Ajustes adicionales para el contenedor general
+  .menu-container {
+    padding: 0.5rem;
+  }
+
+  .menu-header {
+    h1 {
+      font-size: 1rem;
+    }
+
+    .add-btn {
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  .search-bar .search-filters {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
 // ==========================================
 // SUAVIZAR APARICIÓN DE LAS FILAS DE PRODUCTOS (evita flicker)
 // ==========================================

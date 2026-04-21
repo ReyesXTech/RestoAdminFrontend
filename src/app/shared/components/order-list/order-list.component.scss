@@ -9,8 +9,9 @@
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  //max-height: calc(100vh - 12rem);
   height: 100%;
+  min-width: 0;
+
   &.hidden {
     display: none;
   }
@@ -116,6 +117,7 @@
   padding: 1rem;
   overflow-y: auto;
   flex: 1;
+  min-width: 0;
   @include custom-scrollbar;
 }
 
@@ -185,6 +187,7 @@
     display: block;
     animation: fade-in-up 0.25s ease-out forwards;
     opacity: 0;
+    min-width: 0;
 
     // Retraso escalonado para un efecto de cascada suave
     @for $i from 1 through 20 {

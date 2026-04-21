@@ -49,6 +49,11 @@ export class HistorialComponent implements OnInit, OnDestroy {
   searchStartDate = signal('');
   searchEndDate = signal('');
 
+  // Señales para el tooltip de dirección
+  addressTooltipVisible = signal(false);
+  addressTooltipPosition = signal({ x: 0, y: 0 });
+  currentTooltipAddress = signal('');
+
   // Debounce para búsqueda
   private searchSubject = new Subject<void>();
   private searchSubscription = this.searchSubject
@@ -80,6 +85,20 @@ export class HistorialComponent implements OnInit, OnDestroy {
     this.toastService.clear();
     this.effectRef?.destroy();
     this.searchSubscription.unsubscribe();
+  }
+
+  toggleAddressTooltip(event: MouseEvent, address: string) {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top - 8;
+    this.addressTooltipPosition.set({ x, y });
+    this.currentTooltipAddress.set(address);
+    this.addressTooltipVisible.set(true);
+  }
+
+  closeAddressTooltip() {
+    this.addressTooltipVisible.set(false);
   }
 
   /**

@@ -33,7 +33,13 @@
               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
             ></path>
           </svg>
-          {{ order()!.deliveryAddress }}
+          <span
+            class="address-text"
+            (click)="toggleAddressTooltip($event)"
+            title="Click para ver dirección completa"
+          >
+            {{ order()!.deliveryAddress }}
+          </span>
         </p>
         @if (order()!.status === OrderStatus.Ready) {
           <span class="status-badge ready">LISTO PARA ENTREGA</span>
@@ -100,5 +106,20 @@
         </a>
       </div>
     </div>
+
+    <!-- Tooltip de dirección completo -->
+    @if (addressTooltipVisible()) {
+      <div
+        class="address-tooltip-fixed"
+        [style.left.px]="addressTooltipPosition().x"
+        [style.top.px]="addressTooltipPosition().y"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="tooltip-content">
+          {{ currentAddress() }}
+        </div>
+        <button class="close-tooltip" (click)="closeAddressTooltip()" aria-label="Cerrar">✕</button>
+      </div>
+    }
   </div>
 }

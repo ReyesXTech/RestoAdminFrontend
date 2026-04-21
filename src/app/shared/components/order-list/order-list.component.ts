@@ -25,6 +25,7 @@ export class OrderListComponent {
 
   // 🆕 Output para scroll
   scrollEvent = output<Event>();
+  editOrder = output<OrderListItemDto>();
 
   get listTitle(): string {
     return this.type() === 'pendientes' ? 'PENDIENTES' : 'LISTOS';

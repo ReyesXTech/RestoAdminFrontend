@@ -10,6 +10,7 @@ import { PendingReadyOrderDetailModalComponent } from '../../shared/components/o
 import { IsUrgentPipe } from '../../pipes/is-urgent.pipe';
 import { OrderListComponent } from '../../shared/components/order-list/order-list.component';
 import { CreateOrderModalComponent } from '../../shared/components/create-order-modal/create-order-modal.component';
+import { EditOrderModalComponent } from '../../shared/components/edit-order-modal/edit-order-modal.component';
 
 @Component({
   selector: 'app-pedidos',
@@ -20,6 +21,7 @@ import { CreateOrderModalComponent } from '../../shared/components/create-order-
     IsUrgentPipe,
     OrderListComponent,
     CreateOrderModalComponent,
+    EditOrderModalComponent,
   ],
   templateUrl: './pedidos.component.html',
   styleUrls: ['./pedidos.component.scss'],
@@ -40,6 +42,8 @@ export class PedidosComponent implements OnInit, OnDestroy {
   showCancelModal = signal(false);
   orderToCancel = signal<OrderListItemDto | null>(null);
   showCreateModal = signal(false);
+  showEditModal = signal(false);
+  editingOrderId = signal<string | null>(null);
 
   openCreateModal() {
     this.showCreateModal.set(true);
@@ -50,6 +54,25 @@ export class PedidosComponent implements OnInit, OnDestroy {
   onOrderCreated() {
     this.closeCreateModal();
     this.loadOrders();
+  }
+
+  // 🆕 Manejar evento de editar
+  onEditOrder(order: OrderListItemDto): void {
+    this.editingOrderId.set(order.id);
+    this.showEditModal.set(true);
+  }
+
+  closeEditModal(): void {
+    this.showEditModal.set(false);
+    this.editingOrderId.set(null);
+  }
+
+  onOrderUpdated(): void {
+    this.closeEditModal();
+    // Refrescar ambas listas
+    this.dataService.loadPendingOrders();
+    this.dataService.loadReadyOrders();
+    this.toastService.show('Pedido actualizado exitosamente', 'success');
   }
 
   ngOnInit(): void {

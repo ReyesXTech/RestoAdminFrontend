@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderDetailResponse, OrderStatus } from '../../../models';
 import { TimeService } from '../../../services/time.service';
@@ -19,6 +19,11 @@ export class CancelledOrderDetailModalComponent {
 
   readonly OrderStatus = OrderStatus;
 
+  // Tooltip de dirección
+  addressTooltipVisible = signal(false);
+  addressTooltipPosition = signal({ x: 0, y: 0 });
+  currentAddress = signal('');
+
   getWhatsAppLink(order: OrderDetailResponse): string {
     const phone = order.phone || '';
     const message = encodeURIComponent(
@@ -33,5 +38,21 @@ export class CancelledOrderDetailModalComponent {
 
   onClose(): void {
     this.close.emit();
+  }
+
+  // Abrir tooltip de dirección
+  toggleAddressTooltip(event: MouseEvent): void {
+    event.stopPropagation();
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top - 8;
+    this.addressTooltipPosition.set({ x, y });
+    this.currentAddress.set(this.order()?.deliveryAddress || '');
+    this.addressTooltipVisible.set(true);
+  }
+
+  closeAddressTooltip(): void {
+    this.addressTooltipVisible.set(false);
   }
 }

@@ -1,6 +1,13 @@
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
+// ===== TEMA ÁMBAR (AMBER) =====
+$amber-primary: #d97706; // amber-600
+$amber-light: #fbbf24; // amber-400
+$amber-dark: #b45309; // amber-700
+$amber-bg-light: #fffbeb; // amber-50
+$amber-border: #fcd34d; // amber-300
+
 // ===== MODAL BASE =====
 .modal-overlay {
   position: fixed;
@@ -30,11 +37,12 @@
 
 .modal-header {
   padding: 1.5rem 2rem;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid $amber-border;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--surface-muted);
+  background: linear-gradient(135deg, $amber-primary, $amber-dark);
+  color: white;
 
   .header-title {
     display: flex;
@@ -49,7 +57,7 @@
       margin: 0;
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--text-primary);
+      color: white;
     }
   }
 
@@ -58,7 +66,7 @@
     border: none;
     font-size: 1.75rem;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.8);
     width: 2.5rem;
     height: 2.5rem;
     display: flex;
@@ -68,8 +76,8 @@
     transition: all 0.2s;
 
     &:hover {
-      background: var(--surface-bg);
-      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
       transform: rotate(90deg);
     }
   }
@@ -94,7 +102,7 @@
     border-radius: 4px;
 
     &:hover {
-      background: color(indigo-400);
+      background: $amber-primary;
     }
   }
 }
@@ -120,7 +128,7 @@
     margin-bottom: 1.5rem;
     color: var(--text-primary);
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid color(indigo-500);
+    border-bottom: 2px solid $amber-primary;
 
     .section-icon {
       font-size: 1.5rem;
@@ -159,13 +167,13 @@
     transition: all 0.2s;
 
     &:hover {
-      border-color: color(indigo-400);
+      border-color: $amber-light;
     }
 
     &:focus {
       outline: none;
-      border-color: color(indigo-500);
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+      border-color: $amber-primary;
+      box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
       background: var(--surface-bg);
     }
 
@@ -182,7 +190,6 @@
   }
 }
 
-// Grid para campos en dos columnas
 .form-row-group {
   display: grid;
   grid-template-columns: 1fr;
@@ -210,32 +217,25 @@
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-
-    // Flecha personalizada (gris por defecto)
     appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1rem;
 
     &:hover {
-      border-color: color(indigo-400);
+      border-color: $amber-light;
     }
 
     &:focus {
       outline: none;
-      border-color: color(indigo-500);
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+      border-color: $amber-primary;
+      box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
     }
 
-    // FIX: Colores oscuros para opciones
     option {
       background-color: var(--surface-bg) !important;
       color: var(--text-primary) !important;
-      padding: 0.5rem;
     }
   }
 
@@ -245,48 +245,41 @@
   }
 }
 
-// ===== SELECTS - FIX PARA EL PESTAÑAZO BLANCO =====
+// ===== SELECTS =====
 select,
 .product-select,
 .category-select {
   appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  // Fondo consistente
   background-color: var(--surface-bg) !important;
   color: var(--text-primary) !important;
   border: 2px solid var(--border-color);
   cursor: pointer;
 
-  // FIX: Forzar colores en el dropdown
   option {
     background-color: var(--surface-bg) !important;
     color: var(--text-primary) !important;
     padding: 0.75rem 1rem;
 
     &:checked {
-      background-color: color(indigo-600) !important;
+      background-color: $amber-primary !important;
       color: white !important;
     }
   }
 
   &:hover {
-    border-color: color(indigo-400);
+    border-color: $amber-light;
   }
 
   &:focus {
     outline: none;
-    border-color: color(indigo-500);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    border-color: $amber-primary;
+    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
   }
 }
 
-// Select de categoría con flecha
 .category-select {
   padding: 0.875rem 3rem 0.875rem 1rem;
   border-radius: 0.75rem;
-  font-size: 0.9375rem;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
@@ -298,7 +291,6 @@ input[type='datetime-local'] {
   cursor: pointer;
 
   &::-webkit-calendar-picker-indicator {
-    // Icono negro por defecto (sin filtro)
     cursor: pointer;
     opacity: 0.6;
     transition: opacity 0.2s;
@@ -326,38 +318,9 @@ input[type='datetime-local'] {
   transition: all 0.2s;
 
   &:hover {
-    border-color: color(indigo-400);
+    border-color: $amber-light;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .item-select-wrapper {
-    flex: 2;
-    min-width: 0;
-  }
-
-  .product-select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 0.625rem;
-    background-color: var(--surface-bg);
-    color: var(--text-primary);
-    font-size: 0.9375rem;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: color(indigo-500);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    }
-
-    option {
-      background-color: var(--surface-bg) !important;
-      color: var(--text-primary) !important;
-      padding: 0.75rem;
-    }
   }
 
   .quantity-input {
@@ -373,13 +336,8 @@ input[type='datetime-local'] {
 
     &:focus {
       outline: none;
-      border-color: color(indigo-500);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    }
-
-    &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button {
-      opacity: 1;
+      border-color: $amber-primary;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
     }
   }
 
@@ -391,7 +349,7 @@ input[type='datetime-local'] {
     width: 2.75rem;
     height: 2.75rem;
     padding: 0;
-    background-color: color(red-100);
+    background-color: #fee2e2;
     border: none;
     border-radius: 0.625rem;
     cursor: pointer;
@@ -399,7 +357,7 @@ input[type='datetime-local'] {
     transition: all 0.2s;
 
     &:hover {
-      background-color: color(red-200);
+      background-color: #fecaca;
       transform: scale(1.1) rotate(5deg);
     }
 
@@ -409,7 +367,6 @@ input[type='datetime-local'] {
   }
 }
 
-// Botón agregar item
 .add-item {
   display: flex;
   align-items: center;
@@ -433,9 +390,9 @@ input[type='datetime-local'] {
   }
 
   &:hover {
-    border-color: color(indigo-500);
-    background-color: rgba(99, 102, 241, 0.08);
-    color: color(indigo-500);
+    border-color: $amber-primary;
+    background-color: rgba(217, 119, 6, 0.08);
+    color: $amber-primary;
     transform: translateY(-2px);
   }
 
@@ -463,8 +420,8 @@ input[type='datetime-local'] {
 
   &:focus {
     outline: none;
-    border-color: color(indigo-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    border-color: $amber-primary;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
   }
 }
 
@@ -480,8 +437,6 @@ input[type='datetime-local'] {
   border-radius: 0.625rem;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
   z-index: 50;
-  max-height: calc(5 * 3.1rem);
-  overflow-y: auto;
 }
 
 .combobox-option {
@@ -502,7 +457,7 @@ input[type='datetime-local'] {
   }
 
   &.selected {
-    background: rgba(99, 102, 241, 0.15);
+    background: rgba(217, 119, 6, 0.15);
     font-weight: 600;
   }
 
@@ -556,7 +511,7 @@ input[type='datetime-local'] {
 
     &:hover {
       background: var(--surface-bg);
-      border-color: color(indigo-400);
+      border-color: $amber-light;
       transform: translateY(-2px);
     }
 
@@ -566,14 +521,14 @@ input[type='datetime-local'] {
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, color(indigo-600), color(indigo-700));
+    background: linear-gradient(135deg, $amber-primary, $amber-dark);
     border: none;
     color: white;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
 
     &:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
     }
 
     &:active:not(:disabled) {
@@ -588,15 +543,58 @@ input[type='datetime-local'] {
   }
 }
 
-// ===== MENSAJES DE ERROR =====
-.error-text {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  font-size: 0.8125rem;
-  color: color(red-500);
-  font-weight: 500;
+// ===== MODO OSCURO =====
+:host-context([data-theme='dark']) {
+  select,
+  .product-select,
+  .category-select,
+  .country-code-select {
+    background-color: var(--surface-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+
+    &.country-code-select,
+    &.category-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    }
+
+    option {
+      background-color: var(--surface-bg) !important;
+      color: var(--text-primary) !important;
+    }
+  }
+
+  input,
+  textarea {
+    background-color: var(--surface-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+
+    &::placeholder {
+      color: var(--text-secondary) !important;
+      opacity: 0.6;
+    }
+  }
+
+  input[type='datetime-local']::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.8;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .item-row {
+    background-color: var(--surface-muted) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .btn-secondary {
+    background: var(--surface-muted) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+  }
 }
 
 // ===== ANIMACIONES =====
@@ -617,67 +615,5 @@ input[type='datetime-local'] {
   to {
     transform: translateY(0);
     opacity: 1;
-  }
-}
-
-// ===== MODO OSCURO - FIX COMPLETO =====
-:host-context([data-theme='dark']) {
-  // Todos los selects
-  select,
-  .product-select,
-  .category-select,
-  .country-code-select {
-    background-color: var(--surface-bg) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--border-color) !important;
-
-    // Flecha blanca para selects con custom arrow
-    &.country-code-select,
-    &.category-select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
-    }
-
-    option {
-      background-color: var(--surface-bg) !important;
-      color: var(--text-primary) !important;
-    }
-  }
-
-  // Inputs y textareas en modo oscuro
-  input,
-  textarea {
-    background-color: var(--surface-bg) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--border-color) !important;
-
-    &::placeholder {
-      color: var(--text-secondary) !important;
-      opacity: 0.6;
-    }
-  }
-
-  // Icono blanco del calendario SOLO en modo oscuro
-  input[type='datetime-local'] {
-    &::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-      opacity: 0.8;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
-
-  // Items de productos en modo oscuro
-  .item-row {
-    background-color: var(--surface-muted) !important;
-    border-color: var(--border-color) !important;
-  }
-
-  // Botones en modo oscuro
-  .btn-secondary {
-    background: var(--surface-muted) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-primary) !important;
   }
 }

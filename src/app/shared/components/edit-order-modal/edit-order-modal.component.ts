@@ -1,4 +1,4 @@
-import { Component, inject, output, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, input, output, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormArray,
@@ -11,26 +11,31 @@ import {
 import { OrdersService } from '../../../services/orders.service';
 import { ToastService } from '../../../services/toast.service';
 import { MenuService } from '../../../services/menu.service';
-import { CreateOrderCommand, CreateOrderItemDto } from '../../../models/order.models';
-import { ProductCategory } from '../../../models/common.models';
+import {
+  UpdateOrderCommand,
+  UpdateOrderItemDto,
+  OrderDetailResponse,
+} from '../../../models/order.models';
+import { AddressDto } from '../../../models/';
 import { ProductResponse } from '../../../models/product.models';
-import { Subscription, combineLatest, map, startWith, Observable, of } from 'rxjs';
+import { Subscription, map, startWith, Observable, of } from 'rxjs';
 
 @Component({
-  selector: 'app-create-order-modal',
+  selector: 'app-edit-order-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './create-order-modal.component.html',
-  styleUrls: ['./create-order-modal.component.scss'],
+  templateUrl: './edit-order-modal.component.html',
+  styleUrls: ['./edit-order-modal.component.scss'],
 })
-export class CreateOrderModalComponent implements OnInit, OnDestroy {
+export class EditOrderModalComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private ordersService = inject(OrdersService);
   private toastService = inject(ToastService);
   private menuService = inject(MenuService);
 
+  orderId = input.required<string>();
   close = output<void>();
-  created = output<void>();
+  updated = output<void>();
 
   readonly countryCodes = [
     { code: '+53', name: 'Cuba' },
@@ -40,17 +45,14 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
     { code: '+54', name: 'Argentina' },
   ];
 
-  categories = Object.entries(ProductCategory)
-    .filter(([key]) => isNaN(Number(key)))
-    .map(([key, value]) => ({ name: key, value: value as number }));
-
   readonly availableProducts = this.menuService.products;
 
   private searchSubscriptions: Subscription[] = [];
   filteredOptionsMap: Map<number, Observable<ProductResponse[]>> = new Map();
 
-  // Estado para controlar qué dropdown está abierto
   openDropdownIndex: number | null = null;
+  isLoading = signal(false);
+  originalOrder: OrderDetailResponse | null = null;
 
   orderForm = this.fb.group({
     clientName: ['', Validators.required],
@@ -70,15 +72,87 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.menuService.loadProducts({ isActive: true });
-    this.addItem(); // Agregar un item inicial
   }
 
   ngOnInit(): void {
-    this.initializeComboboxes();
+    this.loadOrder();
   }
 
   ngOnDestroy(): void {
     this.searchSubscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  private async loadOrder(): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const order = await this.ordersService.getOrderById(this.orderId());
+      this.originalOrder = order;
+      this.patchFormWithOrder(order);
+      this.initializeComboboxes();
+    } catch (error) {
+      this.toastService.show('Error al cargar el pedido', 'error');
+      this.onClose();
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private patchFormWithOrder(order: OrderDetailResponse): void {
+    // Teléfono: separar código de país y número
+    const phoneInfo = this.parsePhone(order.phone);
+    this.orderForm.patchValue({
+      clientName: order.clientName,
+      phoneCountryCode: phoneInfo.countryCode,
+      phoneNationalNumber: phoneInfo.nationalNumber,
+      desiredDeliveryTimeUtc: this.formatDateForInput(order.desiredDeliveryTimeUtc),
+      // ⚠️ Asumimos que el backend devuelve los campos de dirección en OrderDetailResponse.
+      // Si no es así, habría que obtenerlos de otro endpoint o parsear deliveryAddress.
+      city: (order as any).city ?? '',
+      municipality: (order as any).municipality ?? '',
+      mainStreet: (order as any).mainStreet ?? '',
+      street1: (order as any).street1 ?? '',
+      street2: (order as any).street2 ?? '',
+      houseNumber: (order as any).houseNumber ?? '',
+      apartmentNumber: (order as any).apartmentNumber ?? '',
+      additionalInfo: (order as any).additionalInfo ?? '',
+    });
+
+    // Rellenar ítems
+    const itemsArray = this.orderForm.get('items') as FormArray;
+    itemsArray.clear();
+    order.items.forEach((item) => {
+      const group = this.fb.group({
+        productId: [item.productId, Validators.required],
+        quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+        searchControl: [item.productName],
+      });
+      itemsArray.push(group);
+    });
+    if (itemsArray.length === 0) {
+      this.addItem(); // Asegurar al menos un ítem
+    }
+  }
+
+  private parsePhone(phone: string): { countryCode: string; nationalNumber: string } {
+    const matchedCode = this.countryCodes.find((c) => phone.startsWith(c.code));
+    if (matchedCode) {
+      return {
+        countryCode: matchedCode.code,
+        nationalNumber: phone.substring(matchedCode.code.length),
+      };
+    }
+    // Fallback: sin código conocido
+    return { countryCode: '+53', nationalNumber: phone };
+  }
+
+  private formatDateForInput(isoString: string): string {
+    const date = new Date(isoString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   private initializeComboboxes(): void {
@@ -89,28 +163,21 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
 
   private setupItemCombobox(index: number): void {
     const itemGroup = this.itemsArray.at(index) as FormGroup;
-
     if (!itemGroup.contains('searchControl')) {
       itemGroup.addControl('searchControl', new FormControl(''));
     }
-
     const searchControl = itemGroup.get('searchControl') as FormControl;
-
     const filtered$ = searchControl.valueChanges.pipe(
-      startWith(''),
-      map((searchTerm) => this.filterProducts(searchTerm || '')),
+      startWith(searchControl.value),
+      map((term) => this.filterProducts(term || '')),
     );
-
     this.filteredOptionsMap.set(index, filtered$);
   }
 
   private filterProducts(searchTerm: string): ProductResponse[] {
     const term = searchTerm.toLowerCase().trim();
     const products = this.availableProducts();
-    if (!term) {
-      return products.slice(0, 20);
-    }
-
+    if (!term) return products.slice(0, 20);
     return products
       .filter(
         (p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term),
@@ -123,12 +190,11 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
   }
 
   createItem(): FormGroup {
-    const group = this.fb.group({
+    return this.fb.group({
       productId: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
       searchControl: [''],
     });
-    return group;
   }
 
   addItem(): void {
@@ -141,14 +207,10 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
   removeItem(index: number): void {
     this.itemsArray.removeAt(index);
     this.filteredOptionsMap.delete(index);
-    // Reconstruir el mapa para los índices posteriores
     const newMap = new Map<number, Observable<ProductResponse[]>>();
     this.filteredOptionsMap.forEach((value, key) => {
-      if (key < index) {
-        newMap.set(key, value);
-      } else if (key > index) {
-        newMap.set(key - 1, value);
-      }
+      if (key < index) newMap.set(key, value);
+      else if (key > index) newMap.set(key - 1, value);
     });
     this.filteredOptionsMap = newMap;
   }
@@ -159,9 +221,7 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
 
   onComboboxBlur(index: number): void {
     setTimeout(() => {
-      if (this.openDropdownIndex === index) {
-        this.openDropdownIndex = null;
-      }
+      if (this.openDropdownIndex === index) this.openDropdownIndex = null;
     }, 200);
   }
 
@@ -172,10 +232,9 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
   onProductSelected(index: number, product: ProductResponse): void {
     const itemGroup = this.itemsArray.at(index) as FormGroup;
     itemGroup.patchValue({ productId: product.id });
-
     const searchControl = itemGroup.get('searchControl') as FormControl;
     searchControl.setValue(product.name, { emitEvent: false });
-    this.openDropdownIndex = null; // Cerrar dropdown después de seleccionar
+    this.openDropdownIndex = null;
   }
 
   getFilteredOptions(index: number): Observable<ProductResponse[]> {
@@ -195,13 +254,9 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
     }
 
     const formValue = this.orderForm.value;
-
-    // Garantizar que items existe (TypeScript no puede inferirlo, usamos fallback)
     const items = (formValue.items ?? []) as any[];
 
-    const command: CreateOrderCommand = {
-      clientName: formValue.clientName!,
-      phone: this.getFullPhoneNumber(),
+    const address: AddressDto = {
       city: formValue.city!,
       municipality: formValue.municipality!,
       mainStreet: formValue.mainStreet!,
@@ -210,20 +265,31 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
       houseNumber: formValue.houseNumber!,
       apartmentNumber: formValue.apartmentNumber || null,
       additionalInfo: formValue.additionalInfo || null,
+    };
+
+    const command: UpdateOrderCommand = {
+      orderId: this.orderId(),
+      clientName: formValue.clientName!,
+      phone: this.getFullPhoneNumber(),
+      deliveryAddress: address,
       desiredDeliveryTimeUtc: new Date(formValue.desiredDeliveryTimeUtc!).toISOString(),
       items: items.map((item: any) => ({
         productId: item.productId,
+        productName: item.searchControl || '', // El backend puede ignorar o usar para validación
         quantity: item.quantity,
+        unitPriceAmount: 0, // El backend debe obtener el precio actual
+        unitPriceCurrency: 0 as any, // Se rellena en el servidor
       })),
     };
 
     try {
-      await this.ordersService.createOrder(command);
-      this.toastService.show('Pedido creado exitosamente', 'success');
-      this.created.emit();
+      // ⚠️ Asegúrate de que OrdersService tenga un método updateOrder
+      await (this.ordersService as any).updateOrder(command);
+      this.toastService.show('Pedido actualizado exitosamente', 'success');
+      this.updated.emit();
       this.onClose();
     } catch (error) {
-      this.toastService.show('Error al crear el pedido', 'error');
+      this.toastService.show('Error al actualizar el pedido', 'error');
     }
   }
 

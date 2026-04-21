@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
 import { UserResponse, UserRole } from '../../models';
+import { TooltipService } from '../../services/tooltip.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -14,6 +15,7 @@ import { UserResponse, UserRole } from '../../models';
 export class UsuariosComponent implements OnInit {
   readonly UserRole = UserRole;
 
+  private tooltipService = inject(TooltipService);
   private dataService = inject(DataService);
 
   readonly users = this.dataService.users;
@@ -50,8 +52,8 @@ export class UsuariosComponent implements OnInit {
   openEditModal(user: UserResponse): void {
     this.formName = user.fullName;
     this.formPhone = user.phone || '';
-    this.formRole = user.role;
-    this.formPassword = ''; // no se muestra en edición
+    this.formRole = this.normalizeRole(user.role);
+    this.formPassword = '';
     this.showModal = true;
     this.editingId = user.id;
     this.modalMode = 'edit';
@@ -59,6 +61,44 @@ export class UsuariosComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
+  }
+
+  getRoleName(role: any): string {
+    if (typeof role === 'number') {
+      return role === UserRole.Admin ? 'Admin' : 'Operario';
+    }
+    if (typeof role === 'string') {
+      return role.toLowerCase() === 'admin' ? 'Admin' : 'Operario';
+    }
+    return 'Operario';
+  }
+
+  getRoleBadgeClass(role: any): string {
+    if (typeof role === 'number') {
+      return role === UserRole.Admin ? 'admin' : 'operario';
+    }
+
+    if (typeof role === 'string') {
+      const normalized = role.trim().toLowerCase();
+      if (normalized === 'admin') return 'admin';
+      if (normalized === 'operator' || normalized === 'operario') return 'operario';
+    }
+
+    return 'operario';
+  }
+
+  // En usuarios.component.ts
+  private normalizeRole(role: any): UserRole {
+    if (typeof role === 'number') {
+      return role;
+    }
+    if (typeof role === 'string') {
+      const normalized = role.trim().toLowerCase();
+      if (normalized === 'admin') return UserRole.Admin;
+      if (normalized === 'operator' || normalized === 'operario') return UserRole.Operator;
+    }
+    // Valor por defecto (por si acaso)
+    return UserRole.Operator;
   }
 
   async saveUser(): Promise<void> {
@@ -112,5 +152,18 @@ export class UsuariosComponent implements OnInit {
   closeDeleteModal(): void {
     this.showDeleteModal.set(false);
     this.userToDelete.set(null);
+  }
+
+  showActionTooltip(event: MouseEvent, action: 'edit' | 'delete'): void {
+    const button = event.currentTarget as HTMLElement;
+    const rect = button.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top - 8;
+    const text = action === 'edit' ? 'Editar' : 'Eliminar';
+    this.tooltipService.show(text, x, y);
+  }
+
+  hideActionTooltip(): void {
+    this.tooltipService.hide();
   }
 }

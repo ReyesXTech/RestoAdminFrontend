@@ -310,6 +310,101 @@
   }
 }
 
+.modal-address {
+  color: color(white);
+  opacity: 0.9;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  .address-text {
+    line-height: 1.4;
+    max-height: calc(1.4em * 2); // Altura máxima de dos líneas
+
+    overflow: hidden;
+    word-break: break-word;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    flex: 1;
+
+    // Desvanecimiento horizontal en el borde derecho
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+// Tooltip de dirección fijo
+.address-tooltip-fixed {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: #1f2937;
+  color: white;
+  padding: 0.5rem 1rem; // Reducido de 0.75rem 1rem
+  border-radius: 0.75rem;
+  max-width: 1000px; // Aumentado de 300px
+  width: max-content; // Se ajusta al contenido
+  word-break: break-word;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem; // Ligeramente más pequeño
+  line-height: 1.4;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1f2937;
+  }
+
+  .tooltip-content {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .close-tooltip {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+:host-context([data-theme='dark']) {
+  .address-tooltip-fixed {
+    background: #374151;
+    &::after {
+      border-top-color: #374151;
+    }
+  }
+}
+
 // Animations
 @keyframes fade-in {
   from {

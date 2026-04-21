@@ -293,17 +293,17 @@
 
         // Anchos aplicados a los <th>
         &:nth-child(1) {
-          width: 15%;
-        } // Cliente
+          width: 20%;
+        } // Nombre
         &:nth-child(2) {
           width: 30%;
-        } // Dirección
+        } // Teléfono
         &:nth-child(3) {
           width: 25%;
-        } // Teléfono
+        } // Rol
         &:nth-child(4) {
           width: 15%;
-        } // Hora
+        } // Acciones
         &:nth-child(5) {
           width: 15%;
         } // Total
@@ -416,6 +416,14 @@
             }
           }
 
+          .address-cell {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            cursor: pointer;
+          }
           .address {
             &.address-pending {
               color: color(amber-900);
@@ -638,7 +646,7 @@
 }
 
 // Responsive
-@media (max-width: 992px) {
+@media (max-width: 830px) {
   .historial-header {
     padding: 0.75rem 1rem;
 
@@ -694,7 +702,7 @@
     -webkit-overflow-scrolling: touch;
 
     table {
-      min-width: 600px;
+      min-width: 720px;
     }
   }
 
@@ -891,5 +899,51 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.address-tooltip-fixed {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: #1f2937;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  max-width: 400px;
+  word-break: break-word;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1f2937;
+  }
+
+  .close-tooltip {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    flex-shrink: 0;
+  }
+}
+
+// Modo oscuro
+:host-context([data-theme='dark']) {
+  .address-tooltip-fixed {
+    background: #374151;
+    &::after {
+      border-top-color: #374151;
+    }
   }
 }

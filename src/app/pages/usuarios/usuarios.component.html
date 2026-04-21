@@ -9,14 +9,12 @@
       </svg>
       Gestión de Usuarios
     </h1>
-    @if (currentUser()?.role === UserRole.Admin) {
-      <button (click)="openAddModal()" class="add-btn">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-        </svg>
-        NUEVO USUARIO
-      </button>
-    }
+    <button (click)="openAddModal()" class="add-btn">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+      </svg>
+      NUEVO USUARIO
+    </button>
   </div>
 
   <!-- Table -->
@@ -26,10 +24,8 @@
         <tr>
           <th>Nombre</th>
           <th>Teléfono</th>
-          <th class="w-40">Rol</th>
-          @if (currentUser()?.role === UserRole.Admin) {
-            <th class="text-right w-32">Acciones</th>
-          }
+          <th>Rol</th>
+          <th class="actions-header">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -40,46 +36,44 @@
             </td>
             <td class="user-phone">{{ user.phone }}</td>
             <td>
-              <span
-                class="role-badge"
-                [class.admin]="user.role === UserRole.Admin"
-                [class.operario]="user.role === UserRole.Operator"
-              >
-                {{ user.role === UserRole.Operator ? 'Operario' : 'Admin' }}
+              <span class="role-badge" [class]="getRoleBadgeClass(user.role)">
+                {{ user.role }}
               </span>
             </td>
-            @if (currentUser()?.role === UserRole.Admin) {
-              <td>
-                <div class="actions" (click)="$event.stopPropagation()">
-                  <div class="action-btn-wrapper">
-                    <button
-                      (click)="$event.stopPropagation(); openEditModal(user)"
-                      class="action-btn edit"
-                    >
-                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
-                        />
-                      </svg>
-                    </button>
-                    <span class="action-tooltip">Editar</span>
-                  </div>
-                  <div class="action-btn-wrapper">
-                    <button (click)="deleteUser(user)" class="action-btn delete">
-                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                          d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-                        />
-                      </svg>
-                    </button>
-                    <span class="action-tooltip">Eliminar</span>
-                  </div>
+            <td>
+              <div class="actions" (click)="$event.stopPropagation()">
+                <div class="action-btn-wrapper">
+                  <button
+                    (click)="$event.stopPropagation(); openEditModal(user)"
+                    class="action-btn edit"
+                    (mouseenter)="showActionTooltip($event, 'edit')"
+                    (mouseleave)="hideActionTooltip()"
+                  >
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                      />
+                    </svg>
+                  </button>
                 </div>
-              </td>
-            }
+                <div class="action-btn-wrapper">
+                  <button
+                    (click)="deleteUser(user)"
+                    class="action-btn delete"
+                    (mouseenter)="showActionTooltip($event, 'delete')"
+                    (mouseleave)="hideActionTooltip()"
+                  >
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </td>
           </tr>
         }
-
         @if (users().length === 0) {
           <tr>
             <td colspan="4" class="empty-state">No hay usuarios registrados.</td>
