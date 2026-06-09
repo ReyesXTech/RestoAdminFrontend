@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { DataService } from '../services/data.service';
 import { ThemeService, Theme } from '../services/theme.service';
@@ -59,4 +59,14 @@ export class LayoutComponent {
   togglePreview(): void {
     this.themeService.togglePreview();
   }
+
+  readonly isAdmin = computed(() => {
+    const user = this.currentUser();
+    if (!user) return false;
+    // El rol puede venir como string ('Admin') o como número (UserRole.Admin = 1)
+    if (typeof user.role === 'number') {
+      return user.role === UserRole.Admin;
+    }
+    return (user.role as string)?.toLowerCase() === 'admin';
+  });
 }

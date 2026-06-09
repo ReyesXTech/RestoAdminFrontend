@@ -247,9 +247,9 @@
         position: absolute;
         bottom: 0;
         right: 0;
-        width: 40%;
+        width: 20%;
         height: 1.4em;
-        background: linear-gradient(to right, transparent, var(--surface-bg) 40%);
+        background: linear-gradient(to right, transparent, var(--surface-bg) 100%);
         pointer-events: none;
       }
     }

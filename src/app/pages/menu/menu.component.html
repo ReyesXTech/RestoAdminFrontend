@@ -135,7 +135,7 @@
             <td>
               <div class="product-image">
                 @if (item.imageUrl) {
-                  <img [src]="item.imageUrl" alt="" />
+                  <img [src]="item.imageUrl" alt="" (error)="handleImageError(item)" />
                 } @else {
                   <svg class="icon placeholder-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path
@@ -148,7 +148,7 @@
             <td>
               <div class="product-name">{{ item.name }}</div>
               <div class="product-ingredients">
-                Ingredientes: <span>{{ item.detailedDescription || 'No especificados' }}</span>
+                Ingredientes: <span>{{ item.description || 'No especificados' }}</span>
               </div>
             </td>
             <td>
@@ -171,6 +171,21 @@
             </td>
             <td>
               <div class="actions">
+                <!-- Botón Duplicar -->
+                <div class="action-btn-wrapper">
+                  <button
+                    (click)="$event.stopPropagation(); duplicateItem(item)"
+                    class="action-btn duplicate"
+                    (mouseenter)="showActionTooltip($event, 'duplicate')"
+                    (mouseleave)="hideActionTooltip()"
+                  >
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                      />
+                    </svg>
+                  </button>
+                </div>
                 <div class="action-btn-wrapper">
                   <button
                     (click)="$event.stopPropagation(); openEditModal(item)"
@@ -238,10 +253,16 @@
 
 <!-- Modal -->
 @if (showModal) {
-  <div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-overlay">
     <div class="modal-content modal-fade-in" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ modalMode === 'add' ? 'Nuevo Platillo' : 'Editar Platillo' }}</h3>
+        <h3>
+          @if (modalMode === 'add') {
+            {{ isDuplicating ? 'Duplicar Platillo' : 'Nuevo Platillo' }}
+          } @else {
+            Editar Platillo
+          }
+        </h3>
         <button (click)="closeModal()" class="close-btn">
           <svg
             class="w-6 h-6"
@@ -255,10 +276,26 @@
         </button>
       </div>
 
+      @if (isDuplicating) {
+        <div class="duplicate-badge">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+            />
+          </svg>
+          <span>Creando a partir de un producto existente</span>
+        </div>
+      }
+
       <div class="modal-body">
         <div class="form-group">
           <label>Nombre del Producto</label>
-          <input [(ngModel)]="formName" name="name" type="text" placeholder="Ej: Pizza Margarita" />
+          <input
+            [(ngModel)]="formName"
+            name="name"
+            type="text"
+            placeholder="Ej: Pizzas Margarita"
+          />
         </div>
 
         <div class="form-group">
@@ -272,13 +309,48 @@
         </div>
 
         <div class="form-group">
-          <label>URL de la Foto</label>
-          <input
-            [(ngModel)]="formImageUrl"
-            name="imageUrl"
-            type="text"
-            placeholder="https://ejemplo.com/foto.jpg"
-          />
+          <label>Imagen del producto</label>
+          <div
+            class="image-upload-wrapper"
+            (dragenter)="onDragEnter($event)"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            [class.dragover]="isDragOver()"
+          >
+            <!-- Vista previa -->
+            @if (imagePreviewUrl()) {
+              <img [src]="imagePreviewUrl()" alt="Vista previa" class="image-preview" />
+            } @else if (formImageUrl) {
+              <img [src]="formImageUrl" alt="Imagen actual" class="image-preview" />
+            }
+
+            <!-- Mensaje cuando se arrastra sobre la zona -->
+            @if (isDragOver()) {
+              <div class="drop-message">Suelta la imagen aquí</div>
+            }
+
+            <!-- Botón para seleccionar archivo -->
+            <button type="button" (click)="fileInput.click()" class="upload-btn">
+              @if (selectedImageFile()) {
+                Cambiar imagen
+              } @else {
+                Seleccionar imagen
+              }
+            </button>
+            <input
+              #fileInput
+              type="file"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              class="hidden-file-input"
+            />
+
+            <!-- Indicador de subida en progreso -->
+            @if (uploadingImage()) {
+              <span class="upload-status">Subiendo imagen...</span>
+            }
+          </div>
         </div>
 
         <div class="form-group">

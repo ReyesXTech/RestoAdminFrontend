@@ -283,6 +283,60 @@
         }
       }
     }
+    .cancel-reason-field {
+      margin: 1.5rem 0 1rem; // menos margen inferior para acercar a los botones
+
+      .cancel-reason-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary); // más contraste
+
+        // Opcional: agregar un pequeño ícono
+        &::before {
+          content: '✏️';
+          font-size: 0.9rem;
+          opacity: 0.7;
+        }
+      }
+
+      .cancel-reason-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--surface-bg); // igual fondo que el modal
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem; // más redondeado
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        resize: vertical;
+        transition: all 0.2s ease;
+
+        // Placeholder más suave
+        &::placeholder {
+          color: var(--text-muted);
+          font-style: italic;
+          font-size: 0.8rem;
+        }
+
+        // Focus: borde con color y sombra suave
+        &:focus {
+          outline: none;
+          border-color: color(indigo-500);
+          box-shadow: 0 0 0 3px rgba(color(indigo-500), 0.1);
+          background-color: var(--surface-bg);
+        }
+
+        // Hover: mejora la experiencia
+        &:hover {
+          border-color: color(indigo-300);
+        }
+      }
+    }
   }
 }
 

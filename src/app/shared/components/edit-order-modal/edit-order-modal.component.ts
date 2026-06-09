@@ -58,15 +58,11 @@ export class EditOrderModalComponent implements OnInit, OnDestroy {
     clientName: ['', Validators.required],
     phoneCountryCode: ['+53', Validators.required],
     phoneNationalNumber: ['', [Validators.required, Validators.pattern(/^\d{6,12}$/)]],
-    city: ['', Validators.required],
+    city: ['', Validators.maxLength(100)],
     municipality: ['', Validators.required],
-    mainStreet: ['', Validators.required],
-    street1: ['', Validators.required],
-    street2: [''],
-    houseNumber: ['', Validators.required],
-    apartmentNumber: [''],
+    street: ['', Validators.required],
     additionalInfo: [''],
-    desiredDeliveryTimeUtc: ['', Validators.required],
+    desiredDeliveryTimeAtLocal: ['', Validators.required],
     items: this.fb.array([]),
   });
 
@@ -104,17 +100,11 @@ export class EditOrderModalComponent implements OnInit, OnDestroy {
       clientName: order.clientName,
       phoneCountryCode: phoneInfo.countryCode,
       phoneNationalNumber: phoneInfo.nationalNumber,
-      desiredDeliveryTimeUtc: this.formatDateForInput(order.desiredDeliveryTimeUtc),
-      // ⚠️ Asumimos que el backend devuelve los campos de dirección en OrderDetailResponse.
-      // Si no es así, habría que obtenerlos de otro endpoint o parsear deliveryAddress.
-      city: (order as any).city ?? '',
-      municipality: (order as any).municipality ?? '',
-      mainStreet: (order as any).mainStreet ?? '',
-      street1: (order as any).street1 ?? '',
-      street2: (order as any).street2 ?? '',
-      houseNumber: (order as any).houseNumber ?? '',
-      apartmentNumber: (order as any).apartmentNumber ?? '',
-      additionalInfo: (order as any).additionalInfo ?? '',
+      desiredDeliveryTimeAtLocal: this.formatDateForInput(order.desiredDeliveryTimeAtLocal),
+      city: order.deliveryAddress.city,
+      municipality: order.deliveryAddress.municipality,
+      street: order.deliveryAddress.street,
+      additionalInfo: order.deliveryAddress.additionalInfo ?? '',
     });
 
     // Rellenar ítems
@@ -136,13 +126,16 @@ export class EditOrderModalComponent implements OnInit, OnDestroy {
   private parsePhone(phone: string): { countryCode: string; nationalNumber: string } {
     const matchedCode = this.countryCodes.find((c) => phone.startsWith(c.code));
     if (matchedCode) {
+      // Extraemos el número nacional y le quitamos los espacios
+      const rawNational = phone.substring(matchedCode.code.length).replace(/\s/g, '');
       return {
         countryCode: matchedCode.code,
-        nationalNumber: phone.substring(matchedCode.code.length),
+        nationalNumber: rawNational,
       };
     }
-    // Fallback: sin código conocido
-    return { countryCode: '+53', nationalNumber: phone };
+    // Fallback: limpiamos todo el string y asumimos código +53
+    const cleanPhone = phone.replace(/\s/g, '');
+    return { countryCode: '+53', nationalNumber: cleanPhone };
   }
 
   private formatDateForInput(isoString: string): string {
@@ -259,11 +252,7 @@ export class EditOrderModalComponent implements OnInit, OnDestroy {
     const address: AddressDto = {
       city: formValue.city!,
       municipality: formValue.municipality!,
-      mainStreet: formValue.mainStreet!,
-      street1: formValue.street1!,
-      street2: formValue.street2 || null,
-      houseNumber: formValue.houseNumber!,
-      apartmentNumber: formValue.apartmentNumber || null,
+      street: formValue.street!,
       additionalInfo: formValue.additionalInfo || null,
     };
 
@@ -272,19 +261,15 @@ export class EditOrderModalComponent implements OnInit, OnDestroy {
       clientName: formValue.clientName!,
       phone: this.getFullPhoneNumber(),
       deliveryAddress: address,
-      desiredDeliveryTimeUtc: new Date(formValue.desiredDeliveryTimeUtc!).toISOString(),
+      desiredDeliveryTimeAtLocal: formValue.desiredDeliveryTimeAtLocal!,
       items: items.map((item: any) => ({
         productId: item.productId,
-        productName: item.searchControl || '', // El backend puede ignorar o usar para validación
         quantity: item.quantity,
-        unitPriceAmount: 0, // El backend debe obtener el precio actual
-        unitPriceCurrency: 0 as any, // Se rellena en el servidor
       })),
     };
 
     try {
-      // ⚠️ Asegúrate de que OrdersService tenga un método updateOrder
-      await (this.ordersService as any).updateOrder(command);
+      await this.ordersService.updateOrder(command);
       this.toastService.show('Pedido actualizado exitosamente', 'success');
       this.updated.emit();
       this.onClose();

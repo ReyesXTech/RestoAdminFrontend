@@ -88,7 +88,7 @@ table {
       padding: 1rem 1.5rem;
       font-size: 0.625rem;
       font-weight: 800;
-      color: color(red-400);
+      color: #da271b;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       text-align: left;
@@ -97,27 +97,25 @@ table {
       overflow: hidden;
       text-overflow: ellipsis;
 
-      // Definir anchos porcentuales (total = 100%)
+      // Definir anchos porcentuales para TODAS las columnas (total = 100%)
       &:nth-child(1) {
-        // Cliente / Dirección
-        width: 37%; // Más espacio para nombre y dirección
-      }
+        width: 20%;
+      } // Cliente / Dirección
       &:nth-child(2) {
-        // Teléfono
-        width: 15%;
-      }
+        width: 16%;
+      } // Teléfono
       &:nth-child(3) {
-        // Fecha y Hora
-        width: 15%;
-      }
-      //   &:nth-child(4) {
-      // Entrega Deseada
-      //     width: 15%;
-      //   }
+        width: 16%;
+      } // Fecha y Hora
+      &:nth-child(4) {
+        width: 14%;
+      } // Entrega Deseada
       &:nth-child(5) {
-        // Total
-        width: 10%;
-        text-align: right;
+        width: 12%;
+      } // Total (¡NUEVO ANCHO!)
+      &.actions-header {
+        width: 12%; // Acciones
+        text-align: center;
       }
     }
   }
@@ -144,25 +142,49 @@ table {
 
         // Aplicar los mismos anchos que en thead
         &:nth-child(1) {
-          // Cliente / Dirección
-          width: 37%;
+          width: 20%;
         }
         &:nth-child(2) {
-          // Teléfono
-          width: 15%;
+          width: 16%;
         }
         &:nth-child(3) {
-          // Fecha y Hora
-          width: 15%;
+          width: 16%;
         }
-        //&:nth-child(4) {
-        // Entrega Deseada
-        //  width: 15%;
-        // }
+        &:nth-child(4) {
+          width: 14%;
+        }
         &:nth-child(5) {
-          // Total
-          width: 10%;
-          text-align: right;
+          width: 12%;
+        } // Total
+        &:nth-child(6) {
+          width: 12%;
+          text-align: center;
+        }
+
+        // Estilos del botón de restaurar
+        .restore-btn {
+          background: #e43125; // amber-500
+          color: white;
+          border: none;
+          width: 2.2rem;
+          height: 2.2rem;
+          border-radius: 2rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s;
+
+          &:hover {
+            background: #10b981; // amber-600
+            transform: scale(1.05);
+          }
+
+          .restore-icon {
+            width: 1.2rem;
+            height: 1.2rem;
+            stroke-width: 2.5;
+          }
         }
 
         .client-name {
@@ -201,6 +223,7 @@ table {
           padding: 0.25rem 0.5rem;
           border-radius: 2rem;
           background-color: color(red-100);
+          white-space: nowrap;
           color: color(red-900);
           cursor: pointer;
           @include transition(all, 150ms);
@@ -248,14 +271,14 @@ table {
 
         .delivery-badge {
           font-size: 0.75rem;
-          font-weight: 700;
+          font-weight: 600;
           padding: 0.25rem 0.5rem;
           border-radius: 0.25rem;
-          background-color: color(red-200);
+          background-color: color(red-100);
           color: color(red-900);
 
           :host-context([data-theme='dark']) & {
-            background-color: color(red-400);
+            background-color: #da271b;
             color: color(red-50);
           }
         }
@@ -381,10 +404,10 @@ table {
 
       // Redistribución de anchos (total = 100%)
       &:nth-child(1) {
-        width: 32%;
+        width: 18%;
       } // Cliente/Dirección (antes 37%)
       &:nth-child(2) {
-        width: 14%;
+        width: 15%;
       } // Teléfono (antes 15%)
       &:nth-child(3) {
         width: 14%;
@@ -395,6 +418,9 @@ table {
       &:nth-child(5) {
         width: 10%;
       } // Total (se mantiene)
+      &:nth-child(6) {
+        width: 10%;
+      }
     }
   }
 }
@@ -411,13 +437,13 @@ table {
       thead th,
       tbody td {
         &:nth-child(1) {
-          width: 25%;
+          width: 15%;
         }
         &:nth-child(2) {
           width: 15%;
         }
         &:nth-child(3) {
-          width: 15%;
+          width: 14%;
         }
         &:nth-child(4) {
           width: 13%;
@@ -440,26 +466,6 @@ table {
     }
   }
 }
-/*
-// Responsive
-@media (max-width: 992px) {
-  .cancelados-header {
-    padding: 0.75rem 1rem;
-
-    h1 {
-      font-size: 1.125rem;
-    }
-  }
-
-  .cancelados-content {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-
-    table {
-      min-width: 600px;
-    }
-  }
-}*/
 
 // ==========================================
 // SUAVIZAR APARICIÓN DE LAS FILAS (evita flicker)

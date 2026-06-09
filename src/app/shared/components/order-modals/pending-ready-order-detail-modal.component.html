@@ -4,8 +4,8 @@
       <!-- Modal Header -->
       <div
         class="modal-header"
-        [class.pending]="order()!.status === OrderStatus.Pending"
-        [class.ready]="order()!.status === OrderStatus.Ready"
+        [class.pending]="order()!.status === OrderStatus.Pendiente"
+        [class.ready]="order()!.status === OrderStatus.Listo"
       >
         <button (click)="onClose()" class="close-btn">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,10 +38,10 @@
             (click)="toggleAddressTooltip($event)"
             title="Click para ver dirección completa"
           >
-            {{ order()!.deliveryAddress }}
+            {{ order()!.formattedDeliveryAddress }}
           </span>
         </p>
-        @if (order()!.status === OrderStatus.Ready) {
+        @if (order()!.status === OrderStatus.Listo) {
           <span class="status-badge ready">LISTO PARA ENTREGA</span>
         } @else if (isUrgent()) {
           <span class="status-badge urgent">URGENTE</span>
@@ -55,7 +55,7 @@
           <div class="delivery-info-card">
             <div class="info-item primary">
               <span class="label">Entrega Deseada</span>
-              <span class="value">{{ formatTime(order()!.desiredDeliveryTimeUtc) }}</span>
+              <span class="value">{{ formatTime(order()!.desiredDeliveryTimeAtLocal) }}</span>
             </div>
             <div class="info-item">
               <span class="label">Teléfono</span>
@@ -66,10 +66,10 @@
 
         <!-- Time Info (Discreet) -->
         <div class="time-info-discreet">
-          <span class="time-label">Pedido: {{ formatTime(order()!.orderTimeUtc) }}</span>
-          @if (order()!.readyTimeUtc) {
+          <span class="time-label">Pedido: {{ formatTime(order()!.creationAtLocalTime) }}</span>
+          @if (order()!.readyTimeAtLocal) {
             <span class="time-separator">•</span>
-            <span class="time-label ready">Listo: {{ formatTime(order()!.readyTimeUtc) }}</span>
+            <span class="time-label ready">Listo: {{ formatTime(order()!.readyTimeAtLocal) }}</span>
           }
         </div>
 

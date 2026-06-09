@@ -5,14 +5,8 @@ export interface CustomerResponse {
   id: string;
   fullName: string;
   phone: string;
-  city: string;
-  municipality: string;
-  mainStreet: string;
-  street1: string;
-  street2?: string | null;
-  houseNumber: string;
-  apartmentNumber?: string | null;
-  additionalInfo?: string | null;
+  address: AddressDto;
+  formattedAddress: string;
 }
 
 // Respuesta para GetAll (resumida)
@@ -21,6 +15,7 @@ export interface CustomerDto {
   fullName: string;
   phone: string;
   defaultAddress: string; // dirección formateada
+  orderCount: Int16Array;
 }
 
 // Queries (normalmente vacías o con parámetros)
@@ -36,26 +31,12 @@ export interface GetCustomerByPhoneQuery {
 export interface CreateCustomerCommand {
   fullName: string;
   phone: string;
-  city: string;
-  municipality: string;
-  mainStreet: string;
-  street1: string;
-  street2?: string | null;
-  houseNumber: string;
-  apartmentNumber?: string | null;
-  additionalInfo?: string | null;
+  address: AddressDto;
 }
 
 export interface UpdateCustomerCommand {
   id: string;
   fullName: string;
   phone: string;
-  city: string;
-  municipality: string;
-  mainStreet: string;
-  street1: string;
-  street2?: string | null;
-  houseNumber: string;
-  apartmentNumber?: string | null;
-  additionalInfo?: string | null;
+  address: AddressDto;
 }

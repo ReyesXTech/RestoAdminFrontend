@@ -19,6 +19,7 @@
           <th>Fecha y Hora</th>
           <th>Entrega Deseada</th>
           <th>Total</th>
+          <th class="actions-header">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -63,21 +64,41 @@
               }
             </td>
             <td>
-              <div class="datetime">{{ order.orderTimeUtc | date: 'medium' }}</div>
+              <div class="datetime">{{ order.creationAtLocalTime | date: 'medium' }}</div>
             </td>
             <td>
               <span class="delivery-badge">{{
-                order.desiredDeliveryTimeUtc | date: 'shortTime'
+                order.desiredDeliveryTimeAtLocal | date: 'shortTime'
               }}</span>
             </td>
             <td class="total">
               <span class="total">{{ order.totalAmount | currency }}</span>
             </td>
+            <td class="actions-cell">
+              <button
+                class="restore-btn"
+                (click)="$event.stopPropagation(); restoreOrder(order.id)"
+                (mouseenter)="showTooltip($event, 'Restaurar a pendiente')"
+                (mouseleave)="hideTooltip()"
+                title="Restaurar a pendiente"
+              >
+                <svg
+                  class="restore-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+              </button>
+            </td>
           </tr>
         }
         @if (cancelledOrders().length === 0 && !loading()) {
           <tr>
-            <td colspan="5">
+            <td colspan="6">
               <div class="empty-state">
                 <div class="empty-wrapper">
                   <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

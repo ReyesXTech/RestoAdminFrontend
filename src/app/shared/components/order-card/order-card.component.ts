@@ -50,7 +50,7 @@ export class OrderCardComponent {
   }
 
   get isUrgent(): boolean {
-    const desired = this.order().desiredDeliveryTimeUtc;
+    const desired = this.order().desiredDeliveryTimeAtLocal;
     if (!desired) return false;
     const deliveryTime = new Date(desired);
     const now = this.currentTime();
@@ -63,7 +63,7 @@ export class OrderCardComponent {
   }
 
   getDeliveryTimeDisplay(): string {
-    const desired = this.order().desiredDeliveryTimeUtc;
+    const desired = this.order().desiredDeliveryTimeAtLocal;
     if (!desired) return 'No especificada';
     const date = new Date(desired);
     const hours = date.getHours().toString().padStart(2, '0');
@@ -77,18 +77,22 @@ export class OrderCardComponent {
 
   onMarkReady(): void {
     this.markReady.emit(this.order().id);
+    this.tooltipService.hide();
   }
 
   onCancelOrder(): void {
     this.cancelOrder.emit(this.order());
+    this.tooltipService.hide();
   }
 
   onRestoreToPending(): void {
     this.restoreToPending.emit(this.order().id);
+    this.tooltipService.hide();
   }
 
   onEditOrder(): void {
     this.editOrder.emit(this.order());
+    this.tooltipService.hide();
   }
 
   copyPhone(phone: string): void {

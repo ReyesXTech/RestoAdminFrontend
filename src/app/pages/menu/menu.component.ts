@@ -27,10 +27,11 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   // Categorías para el selector
   readonly allCategories: ProductCategory[] = [
+    ProductCategory.Entrantes,
     ProductCategory.Ensaladas,
     ProductCategory.Sopas,
-    ProductCategory.Pizza,
-    ProductCategory.Pasta,
+    ProductCategory.Pizzas,
+    ProductCategory.Pastas,
     ProductCategory.Arroces,
     ProductCategory.Hamburguesas,
     ProductCategory.Sandwiches,
@@ -41,11 +42,21 @@ export class MenuComponent implements OnInit, OnDestroy {
     ProductCategory.Salteados,
     ProductCategory.Guarniciones,
     ProductCategory.Postres,
-    ProductCategory.Ron,
-    ProductCategory.Whisky,
+    ProductCategory.Refrescos,
+    ProductCategory.Jugos,
+    ProductCategory.Aguas,
+    ProductCategory.Cafes,
+    ProductCategory.Te,
+    ProductCategory.Cervezas,
     ProductCategory.Vinos,
-    ProductCategory.Cafés,
-    ProductCategory.Té,
+    ProductCategory.Licores,
+    ProductCategory.Cocteles,
+    ProductCategory.Desayunos,
+    ProductCategory.Infantil,
+    ProductCategory.Vegetariano,
+    ProductCategory.Vegano,
+    ProductCategory.SinGluten,
+    ProductCategory.Especialidades,
     ProductCategory.Otros,
   ];
   categories: (ProductCategory | 'all')[] = ['all', ...this.allCategories];
@@ -55,6 +66,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   searchCategory = signal<ProductCategory | 'all'>('all');
   searchStatus = signal<'all' | 'active' | 'inactive'>('all');
 
+  private dragCounter = 0;
   private searchSubject = new Subject<void>();
   private searchSubscription = this.searchSubject
     .pipe(debounceTime(400))
@@ -64,9 +76,10 @@ export class MenuComponent implements OnInit, OnDestroy {
   showModal = false;
   modalMode: 'add' | 'edit' = 'add';
   editingId: string | null = null;
+  isDuplicating = false;
 
   formName = '';
-  formCategory: ProductCategory = ProductCategory.Pizza;
+  formCategory: ProductCategory = ProductCategory.Pizzas;
   formPriceAmount = 0;
   formPriceCurrency: Currency = Currency.CUP;
   formIsActive = true;
@@ -88,6 +101,12 @@ export class MenuComponent implements OnInit, OnDestroy {
   actionTooltipPosition = signal({ x: 0, y: 0 });
   previewItem = signal<ProductResponse | null>(null);
   tooltipPosition = signal({ x: 0, y: 0 });
+
+  // ==================== NUEVAS SEÑALES PARA IMÁGENES ====================
+  selectedImageFile = signal<File | null>(null);
+  uploadingImage = signal(false);
+  imagePreviewUrl = signal<string | null>(null);
+  isDragOver = signal(false);
 
   constructor() {
     effect(() => {
@@ -152,26 +171,37 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     // Respaldo manual por si acaso
     const manualNames: Record<number, string> = {
-      0: 'Ensaladas',
-      1: 'Sopas',
-      2: 'Pizza',
-      3: 'Pasta',
-      4: 'Arroces',
-      5: 'Hamburguesas',
-      6: 'Sándwiches',
-      7: 'Carnes',
-      8: 'Pescados',
-      9: 'Mariscos',
-      10: 'Sushi',
-      11: 'Salteados',
-      12: 'Guarniciones',
-      13: 'Postres',
-      14: 'Ron',
-      15: 'Whisky',
-      16: 'Vinos',
-      17: 'Cafés',
-      18: 'Té',
-      19: 'Otros',
+      0: 'Entrantes',
+      1: 'Ensaladas',
+      2: 'Sopas',
+      3: 'Pizzas',
+      4: 'Pastas',
+      5: 'Arroces',
+      6: 'Hamburguesas',
+      7: 'Sandwiches',
+      8: 'Carnes',
+      9: 'Pescados',
+      10: 'Mariscos',
+      11: 'Sushi',
+      12: 'Salteados',
+      13: 'Guarniciones',
+      14: 'Postres',
+      15: 'Refrescos',
+      16: 'Jugos',
+      17: 'Aguas',
+      18: 'Cafes',
+      19: 'Te',
+      20: 'Cervezas',
+      21: 'Vinos',
+      22: 'Licores',
+      23: 'Cocteles',
+      24: 'Desayunos',
+      25: 'Infantil',
+      26: 'Vegetariano',
+      27: 'Vegano',
+      28: 'SinGluten',
+      29: 'Especialidades',
+      30: 'Otros',
     };
     return manualNames[category] || 'Desconocida';
   }
@@ -185,40 +215,214 @@ export class MenuComponent implements OnInit, OnDestroy {
     return currency === Currency.USD ? 'USD' : currency === Currency.EUR ? 'EUR' : 'CUP';
   }
 
+  // ---------- Drag & Drop ----------
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDragEnter(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragCounter++;
+    this.isDragOver.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragCounter--;
+    if (this.dragCounter === 0) {
+      this.isDragOver.set(false);
+    }
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragCounter = 0;
+    this.isDragOver.set(false);
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      this.processFile(file);
+    }
+  }
+
+  // ---------- Selección de archivo (desde botón) ----------
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.processFile(input.files[0]);
+    }
+  }
+
+  // ---------- Procesamiento: redimensionar + convertir a WebP ----------
+  private processFile(file: File): void {
+    if (!file.type.startsWith('image/')) {
+      alert('Selecciona un archivo de imagen válido.');
+      return;
+    }
+
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e: any) => {
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    img.onload = () => {
+      // Redimensionar manteniendo proporción, máximo 800 px en ancho o alto
+      const MAX_WIDTH = 800;
+      const MAX_HEIGHT = 800;
+      let { width, height } = img;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = Math.round((width * MAX_HEIGHT) / height);
+          height = MAX_HEIGHT;
+        }
+      }
+
+      // Crear canvas y dibujar
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+
+      // Convertir a WebP (calidad 0.8)
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const webpFile = new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), {
+              type: 'image/webp',
+            });
+            this.selectedImageFile.set(webpFile);
+            this.uploadingImage.set(false);
+
+            // Vista previa local
+            const previewUrl = URL.createObjectURL(webpFile);
+            this.imagePreviewUrl.set(previewUrl);
+          } else {
+            alert('No se pudo convertir la imagen a WebP.');
+          }
+        },
+        'image/webp',
+        0.8,
+      );
+    };
+  }
+
+  // ---------- Subir la imagen al backend ----------
+  async uploadSelectedImage(): Promise<string | null> {
+    const file = this.selectedImageFile();
+    if (!file) {
+      return this.formImageUrl || null; // Si no hay archivo nuevo, se queda la URL actual
+    }
+
+    this.uploadingImage.set(true);
+    try {
+      const imageUrl = await this.dataService.uploadImage(file);
+      this.formImageUrl = imageUrl; // Guardar la ruta devuelta por el backend
+      this.selectedImageFile.set(null); // Limpiar selección
+      return imageUrl;
+    } catch (error) {
+      console.error('Error al subir la imagen', error);
+      alert('No se pudo subir la imagen. Inténtalo de nuevo.');
+      return null;
+    } finally {
+      this.uploadingImage.set(false);
+    }
+  }
+
+  handleImageError(item: ProductResponse): void {
+    if (!item.imageUrl) return; // Ya es null, evita bucles
+    console.warn('Imagen rota:', item.imageUrl);
+    this.dataService.updateLocalMenuItems((items: ProductResponse[]) =>
+      items.map((i) => (i.id === item.id ? { ...i, imageUrl: null } : i)),
+    );
+  }
+
   openAddModal(): void {
     this.formName = '';
-    this.formCategory = ProductCategory.Pizza;
+    this.formCategory = ProductCategory.Pizzas;
     this.formPriceAmount = 0;
     this.formPriceCurrency = Currency.CUP;
     this.formIsActive = true;
     this.formDescription = '';
     this.formDetailedDescription = '';
-    this.formImageUrl = '';
     this.editingId = null;
     this.modalMode = 'add';
     this.showModal = true;
+    this.isDuplicating = false;
+    this.selectedImageFile.set(null);
+    this.imagePreviewUrl.set(null);
+    this.uploadingImage.set(false);
+    this.formImageUrl = '';
+  }
+
+  // Método auxiliar para convertir categoría de string a número
+  private parseCategory(value: any): ProductCategory {
+    if (typeof value === 'number') {
+      return value;
+    }
+    // Buscar en el enum usando el string
+    const num = ProductCategory[value as keyof typeof ProductCategory];
+    return num !== undefined ? num : ProductCategory.Pizzas; // valor por defecto
+  }
+
+  private parseCurrency(value: any): Currency {
+    if (typeof value === 'number') return value;
+    const num = Currency[value as keyof typeof Currency];
+    return num !== undefined ? num : Currency.CUP; // valor por defecto
   }
 
   openEditModal(item: ProductResponse): void {
     this.formName = item.name;
-    this.formCategory = item.category;
+    this.formCategory = this.parseCategory(item.category);
     this.formPriceAmount = item.priceAmount;
-    this.formPriceCurrency = item.priceCurrency;
-    this.formIsActive = item.isActive;
+    this.formPriceCurrency = this.parseCurrency(item.priceCurrency);
+    this.formIsActive =
+      item.isActive === true || (item.isActive as any) === 'true' || (item.isActive as any) === 1;
     this.formDescription = item.description;
     this.formDetailedDescription = item.detailedDescription;
     this.formImageUrl = item.imageUrl || '';
+    this.selectedImageFile.set(null);
+    this.imagePreviewUrl.set(null);
+    this.uploadingImage.set(false);
     this.editingId = item.id;
     this.modalMode = 'edit';
     this.showModal = true;
   }
 
   closeModal(): void {
+    if (this.imagePreviewUrl()) {
+      URL.revokeObjectURL(this.imagePreviewUrl()!);
+    }
+    this.imagePreviewUrl.set(null);
+
+    this.dragCounter = 0;
+    this.isDragOver.set(false);
     this.showModal = false;
+    this.isDuplicating = false;
   }
 
   async saveItem(): Promise<void> {
     if (!this.formName.trim() || this.formPriceAmount <= 0) return;
+
+    // Si se seleccionó una imagen nueva, súbela primero
+    if (this.selectedImageFile()) {
+      const uploadedUrl = await this.uploadSelectedImage();
+      if (!uploadedUrl) return; // ya falló
+    }
 
     const productData = {
       name: this.formName,
@@ -322,12 +526,12 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.isEditingRate.set(false);
   }
 
-  showActionTooltip(event: MouseEvent, action: 'edit' | 'delete'): void {
+  showActionTooltip(event: MouseEvent, action: 'edit' | 'delete' | 'duplicate'): void {
     const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top - 8;
-    const text = action === 'edit' ? 'Editar' : 'Eliminar';
+    const text = action === 'edit' ? 'Editar' : action === 'delete' ? 'Eliminar' : 'Duplicar';
     this.tooltipService.show(text, x, y);
   }
 
@@ -342,5 +546,25 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   hidePreview(): void {
     this.previewItem.set(null);
+  }
+
+  duplicateItem(item: ProductResponse): void {
+    // Evitar acumulación de "(copia)"
+    const baseName = item.name.replace(/\s*\(copia\)\s*$/i, '');
+    const duplicatedName = `${baseName} (copia)`;
+
+    this.formName = duplicatedName;
+    this.formCategory = this.parseCategory(item.category);
+    this.formPriceAmount = item.priceAmount;
+    this.formPriceCurrency = this.parseCurrency(item.priceCurrency);
+    this.formIsActive =
+      item.isActive === true || (item.isActive as any) === 'true' || (item.isActive as any) === 1;
+    this.formDescription = item.description;
+    this.formDetailedDescription = item.detailedDescription;
+    this.formImageUrl = item.imageUrl || '';
+    this.editingId = null; // Es un producto nuevo
+    this.modalMode = 'add';
+    this.isDuplicating = true; // Bandera para el título
+    this.showModal = true;
   }
 }

@@ -34,36 +34,29 @@ export class HistorialComponent implements OnInit, OnDestroy {
   public toastService = inject(ToastService);
   private timeService = inject(TimeService);
 
-  // Señales del servicio
   readonly historyOrders = this.dataService.historyOrders;
   readonly loading = this.dataService.historyLoading;
   readonly hasMore = this.dataService.historyHasMore;
   readonly currentTime = this.timeService.currentTime;
 
-  // Enums para la plantilla
   readonly OrderStatus = OrderStatus;
 
-  // Filtros
   searchTerm = signal('');
   searchStatus = signal<'all' | 'pendiente' | 'listo' | 'cancelado'>('all');
   searchStartDate = signal('');
   searchEndDate = signal('');
 
-  // Señales para el tooltip de dirección
   addressTooltipVisible = signal(false);
   addressTooltipPosition = signal({ x: 0, y: 0 });
   currentTooltipAddress = signal('');
 
-  // Debounce para búsqueda
   private searchSubject = new Subject<void>();
   private searchSubscription = this.searchSubject
-    .pipe(debounceTime(400), distinctUntilChanged())
+    .pipe(debounceTime(400))
     .subscribe(() => this.applyFilters());
 
-  // Modal
   selectedOrder = signal<OrderDetailResponse | null>(null);
 
-  // Toasts
   toasts = signal<ReturnType<typeof this.toastService.getToasts>>([]);
   private effectRef?: ReturnType<typeof effect>;
 
@@ -74,7 +67,6 @@ export class HistorialComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Fecha inicial: últimos 30 días
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     this.searchStartDate.set(thirtyDaysAgo.toISOString().split('T')[0]);
@@ -101,15 +93,12 @@ export class HistorialComponent implements OnInit, OnDestroy {
     this.addressTooltipVisible.set(false);
   }
 
-  /**
-   * Agrupa los pedidos por fecha (solo presentación visual)
-   */
   groupedOrders = computed(() => {
     const orders = this.historyOrders();
     const groupsMap = new Map<string, OrderListItemDto[]>();
 
     orders.forEach((order) => {
-      const date = new Date(order.orderTimeUtc).toLocaleDateString('es-ES', {
+      const date = new Date(order.creationAtLocalTime).toLocaleDateString('es-ES', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -127,14 +116,11 @@ export class HistorialComponent implements OnInit, OnDestroy {
     return groups;
   });
 
-  /**
-   * Aplica los filtros actuales y carga la primera página desde el backend
-   */
   private applyFilters(): void {
     const statusMap: Record<string, OrderStatus | undefined> = {
-      pendiente: OrderStatus.Pending,
-      listo: OrderStatus.Ready,
-      cancelado: OrderStatus.Cancelled,
+      pendiente: OrderStatus.Pendiente,
+      listo: OrderStatus.Listo,
+      cancelado: OrderStatus.Cancelado,
       all: undefined,
     };
 
@@ -151,7 +137,6 @@ export class HistorialComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Manejadores de eventos de filtros
   onSearchTermChange(): void {
     this.searchSubject.next();
   }
@@ -172,7 +157,6 @@ export class HistorialComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  // Scroll infinito
   onContentScroll(event: Event): void {
     const element = event.target as HTMLElement;
     const threshold = 100;
@@ -197,7 +181,7 @@ export class HistorialComponent implements OnInit, OnDestroy {
   }
 
   isOrderCancelled(order: OrderDetailResponse): boolean {
-    return order.status === OrderStatus.Cancelled;
+    return order.status === OrderStatus.Cancelado;
   }
 
   copyPhone(phone: string): void {

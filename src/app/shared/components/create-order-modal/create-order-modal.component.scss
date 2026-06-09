@@ -221,6 +221,10 @@
     background-position: right 0.75rem center;
     background-size: 1rem;
 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
     &:hover {
       border-color: color(indigo-400);
     }

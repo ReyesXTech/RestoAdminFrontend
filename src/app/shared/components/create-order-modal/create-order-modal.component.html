@@ -1,4 +1,4 @@
-<div class="modal-overlay" (click)="onClose()">
+<div class="modal-overlay">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div class="header-title">
@@ -55,7 +55,7 @@
           </div>
         </section>
 
-        <!-- Dirección -->
+        <!-- Sección Dirección (reemplazar completamente) -->
         <section class="form-section">
           <h3 class="section-title">
             <span class="section-icon">📍</span>
@@ -85,60 +85,16 @@
           </div>
 
           <div class="form-row">
-            <label for="mainStreet">
+            <label for="street">
               <span class="label-icon">🛣️</span>
-              Calle principal *
+              Calle *
             </label>
-            <input
-              id="mainStreet"
-              formControlName="mainStreet"
-              type="text"
-              placeholder="Ej: Calle 23"
-            />
-          </div>
-
-          <div class="form-row-group">
-            <div class="form-row form-row-half">
-              <label for="street1">
-                <span class="label-icon">↔️</span>
-                Entre calle 1 *
-              </label>
-              <input id="street1" formControlName="street1" type="text" placeholder="Ej: L" />
-            </div>
-            <div class="form-row form-row-half">
-              <label for="street2">
-                <span class="label-icon">↔️</span>
-                Entre calle 2
-              </label>
-              <input id="street2" formControlName="street2" type="text" placeholder="Ej: M" />
-            </div>
-          </div>
-
-          <div class="form-row-group">
-            <div class="form-row form-row-half">
-              <label for="houseNumber">
-                <span class="label-icon">🏠</span>
-                Número de casa *
-              </label>
-              <input
-                id="houseNumber"
-                formControlName="houseNumber"
-                type="text"
-                placeholder="Ej: 456"
-              />
-            </div>
-            <div class="form-row form-row-half">
-              <label for="apartmentNumber">
-                <span class="label-icon">🚪</span>
-                Apartamento
-              </label>
-              <input
-                id="apartmentNumber"
-                formControlName="apartmentNumber"
-                type="text"
-                placeholder="Ej: 3B"
-              />
-            </div>
+            <textarea
+              id="street"
+              formControlName="street"
+              placeholder="Ej: Calle 23 #456 e/ L y M, apto 3B"
+              rows="2"
+            ></textarea>
           </div>
 
           <div class="form-row">
@@ -150,7 +106,7 @@
               id="additionalInfo"
               formControlName="additionalInfo"
               placeholder="Punto de referencia, color de la casa, etc."
-              rows="3"
+              rows="2"
             ></textarea>
           </div>
         </section>
@@ -168,7 +124,7 @@
             </label>
             <input
               id="deliveryTime"
-              formControlName="desiredDeliveryTimeUtc"
+              formControlName="desiredDeliveryTimeAtLocal"
               type="datetime-local"
             />
           </div>

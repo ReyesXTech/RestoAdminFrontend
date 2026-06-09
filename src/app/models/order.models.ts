@@ -9,15 +9,8 @@ export interface CreateOrderItemDto {
 export interface CreateOrderCommand {
   clientName: string;
   phone: string;
-  city: string;
-  municipality: string;
-  mainStreet: string;
-  street1: string;
-  street2?: string | null;
-  houseNumber: string;
-  apartmentNumber?: string | null;
-  additionalInfo?: string | null;
-  desiredDeliveryTimeUtc: string;
+  deliveryAddress: AddressDto;
+  desiredDeliveryTimeAtLocal: string;
   items: CreateOrderItemDto[];
 }
 
@@ -37,15 +30,16 @@ export interface OrderDetailResponse {
   customerId: string;
   clientName: string;
   phone: string;
-  deliveryAddress: string; // string formateado
+  formattedDeliveryAddress: string;
+  deliveryAddress: AddressDto;
   items: OrderItemDto[];
   totalAmount: number;
   totalCurrency: Currency;
   status: OrderStatus; // enum numérico
-  orderTimeUtc: string;
-  desiredDeliveryTimeUtc: string;
-  readyTimeUtc?: string | null;
-  canceledTimeUtc?: string | null;
+  creationAtLocalTime: string;
+  desiredDeliveryTimeAtLocal: string;
+  readyTimeAtLocal?: string | null;
+  canceledTimeAtLocal?: string | null;
 }
 
 // ------------------- Lista paginada de pedidos -------------------
@@ -69,19 +63,16 @@ export interface OrderListItemDto {
   totalAmount: number;
   totalCurrency: Currency;
   status: OrderStatus;
-  orderTimeUtc: string;
-  desiredDeliveryTimeUtc: string;
-  readyTimeUtc?: string | null;
-  canceledTimeUtc?: string | null;
+  creationAtLocalTime: string;
+  desiredDeliveryTimeAtLocal: string;
+  readyTimeAtLocal?: string | null;
+  canceledTimeAtLocal?: string | null;
 }
 
 // ------------------- Actualizar pedido -------------------
 export interface UpdateOrderItemDto {
   productId: string;
-  productName: string;
   quantity: number;
-  unitPriceAmount: number;
-  unitPriceCurrency: Currency;
 }
 
 export interface UpdateOrderCommand {
@@ -89,7 +80,7 @@ export interface UpdateOrderCommand {
   clientName: string;
   phone: string;
   deliveryAddress: AddressDto;
-  desiredDeliveryTimeUtc: string;
+  desiredDeliveryTimeAtLocal: string;
   items: UpdateOrderItemDto[];
 }
 

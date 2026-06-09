@@ -44,6 +44,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
   showCreateModal = signal(false);
   showEditModal = signal(false);
   editingOrderId = signal<string | null>(null);
+  cancelReason = signal<string>('');
 
   openCreateModal() {
     this.showCreateModal.set(true);
@@ -149,6 +150,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
 
   onCancelOrder(order: OrderListItemDto): void {
     this.orderToCancel.set(order);
+    this.cancelReason.set('');
     this.showCancelModal.set(true);
   }
 
@@ -156,7 +158,8 @@ export class PedidosComponent implements OnInit, OnDestroy {
     const order = this.orderToCancel();
     if (order) {
       try {
-        await this.dataService.cancelOrder(order.id);
+        const reason = this.cancelReason().trim();
+        await this.dataService.cancelOrder(order.id, reason || undefined); // 👈 ahora sí funciona
         this.toastService.show('Pedido cancelado exitosamente', 'success');
         this.closeCancelModal();
       } catch {

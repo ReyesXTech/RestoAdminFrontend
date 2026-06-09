@@ -22,6 +22,7 @@
     <table>
       <thead>
         <tr>
+          <th class="avatar-header">Avatar</th>
           <th>Nombre</th>
           <th>Teléfono</th>
           <th>Rol</th>
@@ -31,6 +32,26 @@
       <tbody>
         @for (user of users(); track user.id) {
           <tr (click)="openEditModal(user)" class="user-row">
+            <td class="avatar-cell">
+              <div class="avatar-wrapper">
+                @if (user.photoUrl) {
+                  <img
+                    [src]="user.photoUrl"
+                    [alt]="user.fullName"
+                    class="avatar-img"
+                    (error)="user.photoUrl = null"
+                  />
+                } @else {
+                  <div class="avatar-placeholder">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                      />
+                    </svg>
+                  </div>
+                }
+              </div>
+            </td>
             <td>
               <div class="user-name">{{ user.fullName }}</div>
             </td>
@@ -86,7 +107,7 @@
 
 <!-- Add/Edit User Modal -->
 @if (showModal) {
-  <div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-overlay">
     <div class="modal-content modal-fade-in" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>{{ modalMode === 'add' ? 'Nuevo Usuario' : 'Editar Usuario' }}</h3>
@@ -108,10 +129,29 @@
           <label>Nombre Completo</label>
           <input [(ngModel)]="formName" name="name" type="text" placeholder="Ej: Juan Pérez" />
         </div>
+
         <div class="form-group">
           <label>Número de Teléfono</label>
-          <input [(ngModel)]="formPhone" name="phone" type="text" placeholder="Ej: +53 55555555" />
+          <div class="phone-input-group">
+            <select
+              [(ngModel)]="formPhoneCountryCode"
+              name="phoneCountryCode"
+              class="country-code-select"
+            >
+              @for (cc of countryCodes; track cc.code) {
+                <option [value]="cc.code">{{ cc.code }} {{ cc.name }}</option>
+              }
+            </select>
+            <input
+              [(ngModel)]="formPhoneNationalNumber"
+              name="phoneNationalNumber"
+              type="tel"
+              placeholder="Número local"
+              class="phone-number-input"
+            />
+          </div>
         </div>
+
         <div class="form-group">
           <label>Rol de Usuario</label>
           <select [(ngModel)]="formRole" name="role">
@@ -121,18 +161,17 @@
           </select>
         </div>
 
-        <!-- Campo de contraseña solo en modo creación -->
-        @if (modalMode === 'add') {
-          <div class="form-group">
-            <label>Contraseña</label>
-            <input
-              [(ngModel)]="formPassword"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-            />
-          </div>
-        }
+        <div class="form-group">
+          <label>
+            {{ modalMode === 'add' ? 'Contraseña' : 'Nueva contraseña (opcional)' }}
+          </label>
+          <input
+            [(ngModel)]="formPassword"
+            name="password"
+            type="password"
+            [placeholder]="modalMode === 'add' ? '••••••••' : 'Dejar vacío para mantener actual'"
+          />
+        </div>
       </div>
 
       <div class="modal-footer">

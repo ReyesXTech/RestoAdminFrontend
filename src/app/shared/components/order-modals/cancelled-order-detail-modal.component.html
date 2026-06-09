@@ -34,7 +34,7 @@
             (click)="toggleAddressTooltip($event)"
             title="Click para ver dirección completa"
           >
-            {{ order()!.deliveryAddress }}
+            {{ order()!.formattedDeliveryAddress }}
           </span>
         </p>
         <span class="status-badge cancelled">CANCELADO</span>
@@ -47,7 +47,7 @@
           <div class="delivery-info-card">
             <div class="info-item">
               <span class="label">Entrega Deseada</span>
-              <span class="value">{{ formatTime(order()!.desiredDeliveryTimeUtc) }}</span>
+              <span class="value">{{ formatTime(order()!.desiredDeliveryTimeAtLocal) }}</span>
             </div>
             <div class="info-item">
               <span class="label">Teléfono</span>
@@ -58,9 +58,11 @@
 
         <!-- Time Info (Discreet) -->
         <div class="time-info-discreet">
-          <span class="time-label">Pedido: {{ formatTime(order()!.orderTimeUtc) }}</span>
+          <span class="time-label">Pedido: {{ formatTime(order()!.creationAtLocalTime) }}</span>
           <span class="time-separator">•</span>
-          <span class="time-label">Fecha: {{ order()!.orderTimeUtc | date: 'shortDate' }}</span>
+          <span class="time-label"
+            >Fecha: {{ order()!.creationAtLocalTime | date: 'shortDate' }}</span
+          >
         </div>
 
         <!-- Order Items -->

@@ -14,10 +14,10 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       // Interceptors para todas las peticiones HTTP
       withInterceptors([
-        errorInterceptorFn,  // Manejo de errores
-        jwtInterceptorFn     // Token JWT (actualmente en modo mock)
-      ])
+        errorInterceptorFn, // Manejo de errores
+        jwtInterceptorFn, // Token JWT (actualmente en modo mock)
+      ]),
     ),
-    provideClientHydration(withEventReplay())
-  ]
+    provideClientHydration(withEventReplay()),
+  ],
 };

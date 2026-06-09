@@ -42,3 +42,11 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Herramientas y carpetas específicas que tienes en el proyecto
+.continue/
+.zencoder/
+.zenflow/
+server.log
+
+/.angular

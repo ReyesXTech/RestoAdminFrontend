@@ -443,23 +443,27 @@
 
         // Asignar anchos a los th (con clases)
         &.col-photo {
-          width: 15%;
+          width: 11%;
+        }
+
+        &.col-name {
+          width: 36%;
         }
 
         &.col-category {
-          width: 15%;
+          width: 11%;
         }
 
         &.col-price {
-          width: 10%;
+          width: 11%;
         }
 
         &.col-status {
-          width: 12%;
+          width: 20%;
         }
 
         &.col-actions {
-          width: 8%;
+          width: 11%;
           text-align: right;
         }
 
@@ -495,26 +499,31 @@
           // Aplicar anchos a las celdas por índice (deben coincidir con los th)
           &:nth-child(1) {
             // Foto
-            width: 8%;
+            width: 11%;
+          }
+          &:nth-child(1) {
+            // nombre
+            width: 36%;
           }
           &:nth-child(3) {
             // Categoría
-            width: 12%;
+            width: 11%;
           }
           &:nth-child(4) {
             // Precio
-            width: 10%;
+            width: 11%;
           }
+
           &:nth-child(5) {
-            // Estado
-            width: 12%;
+            // Status
+            width: 20%;
           }
+
           &:nth-child(6) {
             // Acciones
-            width: 8%;
+            width: 11%;
             text-align: right;
           }
-          // La columna 2 (Nombre) toma el resto automáticamente
 
           .product-image {
             width: 2.5rem;
@@ -652,6 +661,13 @@
               border-radius: 9999px;
               color: color(gray-400);
               @include transition(all, 150ms);
+
+              &.duplicate {
+                &:hover {
+                  background-color: color(indigo-50);
+                  color: color(indigo-600);
+                }
+              }
 
               &.edit {
                 &:hover {
@@ -1052,6 +1068,25 @@
     }
   }
 
+  // Badge para indicar que se está duplicando un producto
+  .duplicate-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: color(indigo-100);
+    color: color(indigo-700);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-bottom: 1px solid color(blue-200);
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      color: color(blue-500);
+    }
+  }
+
   .modal-body {
     padding: 1.5rem;
     max-height: 70vh;
@@ -1386,7 +1421,7 @@
 
     // Nombre del producto (columna 2, antes sin clase) -> le damos clase implícita por posición
     td:nth-child(2) {
-      width: 15%; // Nombre ocupa 35%
+      width: 10%; // Nombre ocupa 35%
     }
     /*
     // Categoría
@@ -1498,5 +1533,74 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.image-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
+  &.dragover {
+    border-color: #3b82f6;
+    background-color: #f0f7ff;
+
+    .drop-message {
+      display: flex; // se muestra durante el arrastre
+      align-items: center;
+      justify-content: center;
+      height: 100px; // mantiene la altura del área
+      color: #3b82f6;
+      font-weight: bold;
+      background: rgba(99, 102, 241, 0.1);
+      pointer-events: none; // no interfiere con el drop
+    }
+
+    .upload-btn {
+      display: none; // oculta el botón, evitando interferencias
+    }
+  }
+
+  .image-preview {
+    max-width: 200px;
+    max-height: 150px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .hidden-file-input {
+    display: none;
+  }
+
+  .upload-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+
+    &:hover {
+      background: #2563eb;
+    }
+  }
+
+  .upload-status {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  .drop-message {
+    display: none; // oculto por defecto
   }
 }

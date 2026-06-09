@@ -4,5 +4,5 @@
 // Exporta todos los interceptores para facilitar su importación
 // ==========================================
 
-export { jwtInterceptorFn, JwtInterceptor } from './jwt.interceptor';
-export { errorInterceptorFn, ErrorInterceptor, handleHttpError } from './error.interceptor';
+export { jwtInterceptorFn } from './jwt.interceptor';
+export { errorInterceptorFn } from './error.interceptor';

@@ -25,14 +25,18 @@
         </svg>
         <input
           type="text"
-          [(ngModel)]="searchTerm"
-          (ngModelChange)="onSearchTermChange()"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event); onSearchTermChange()"
           placeholder="Buscar por nombre o teléfono..."
           class="search-input"
         />
       </div>
       <div class="select-wrapper">
-        <select [(ngModel)]="searchStatus" (ngModelChange)="onStatusChange()" class="status-select">
+        <select
+          [ngModel]="searchStatus()"
+          (ngModelChange)="searchStatus.set($event); onStatusChange()"
+          class="status-select"
+        >
           <option value="all">Todos los estados</option>
           <option value="pendiente">Pendiente</option>
           <option value="listo">Listo</option>
@@ -53,8 +57,8 @@
         </label>
         <input
           type="date"
-          [(ngModel)]="searchStartDate"
-          (ngModelChange)="onDateChange()"
+          [ngModel]="searchStartDate()"
+          (ngModelChange)="searchStartDate.set($event); onDateChange()"
           class="date-input"
         />
       </div>
@@ -70,8 +74,8 @@
         </label>
         <input
           type="date"
-          [(ngModel)]="searchEndDate"
-          (ngModelChange)="onDateChange()"
+          [ngModel]="searchEndDate()"
+          (ngModelChange)="searchEndDate.set($event); onDateChange()"
           class="date-input"
         />
       </div>
@@ -111,17 +115,17 @@
             @for (order of group.orders; track order.id) {
               <tr
                 (click)="viewOrder(order)"
-                [class.cancelled]="order.status === OrderStatus.Cancelled"
-                [class.ready]="order.status === OrderStatus.Ready"
-                [class.pending]="order.status === OrderStatus.Pending"
+                [class.cancelled]="order.status === OrderStatus.Cancelado"
+                [class.ready]="order.status === OrderStatus.Listo"
+                [class.pending]="order.status === OrderStatus.Pendiente"
               >
                 <td>
                   <div class="client-name">{{ order.clientName }}</div>
-                  @if (order.status === OrderStatus.Cancelled) {
+                  @if (order.status === OrderStatus.Cancelado) {
                     <div class="status-badge cancelled">CANCELADO</div>
-                  } @else if (order.status === OrderStatus.Ready) {
+                  } @else if (order.status === OrderStatus.Listo) {
                     <div class="status-badge ready">LISTO</div>
-                  } @else if (order.status === OrderStatus.Pending) {
+                  } @else if (order.status === OrderStatus.Pendiente) {
                     <div class="status-badge pending">PENDIENTE</div>
                   }
                 </td>
@@ -129,9 +133,9 @@
                   <span
                     title="Click para ver dirección completa"
                     class="address address-cell"
-                    [class.address-cancelled]="order.status === OrderStatus.Cancelled"
-                    [class.address-ready]="order.status === OrderStatus.Ready"
-                    [class.address-pending]="order.status === OrderStatus.Pending"
+                    [class.address-cancelled]="order.status === OrderStatus.Cancelado"
+                    [class.address-ready]="order.status === OrderStatus.Listo"
+                    [class.address-pending]="order.status === OrderStatus.Pendiente"
                     (click)="
                       $event.stopPropagation(); toggleAddressTooltip($event, order.deliveryAddress)
                     "
@@ -143,9 +147,9 @@
                   @if (order.phone) {
                     <span
                       class="phone-number"
-                      [class.phone-cancelled]="order.status === OrderStatus.Cancelled"
-                      [class.phone-ready]="order.status === OrderStatus.Ready"
-                      [class.phone-pending]="order.status === OrderStatus.Pending"
+                      [class.phone-cancelled]="order.status === OrderStatus.Cancelado"
+                      [class.phone-ready]="order.status === OrderStatus.Listo"
+                      [class.phone-pending]="order.status === OrderStatus.Pendiente"
                       (click)="$event.stopPropagation(); copyPhone(order.phone)"
                       title="Click para copiar"
                     >
@@ -179,19 +183,19 @@
                 <td>
                   <span
                     class="time"
-                    [class.time-cancelled]="order.status === OrderStatus.Cancelled"
-                    [class.time-ready]="order.status === OrderStatus.Ready"
-                    [class.time-pending]="order.status === OrderStatus.Pending"
+                    [class.time-cancelled]="order.status === OrderStatus.Cancelado"
+                    [class.time-ready]="order.status === OrderStatus.Listo"
+                    [class.time-pending]="order.status === OrderStatus.Pendiente"
                   >
-                    {{ order.orderTimeUtc | date: 'shortTime' }}
+                    {{ order.creationAtLocalTime | date: 'shortTime' }}
                   </span>
                 </td>
                 <td>
                   <span
                     class="total"
-                    [class.total-cancelled]="order.status === OrderStatus.Cancelled"
-                    [class.total-ready]="order.status === OrderStatus.Ready"
-                    [class.total-pending]="order.status === OrderStatus.Pending"
+                    [class.total-cancelled]="order.status === OrderStatus.Cancelado"
+                    [class.total-ready]="order.status === OrderStatus.Listo"
+                    [class.total-pending]="order.status === OrderStatus.Pendiente"
                   >
                     {{ order.totalAmount | currency }}
                   </span>
@@ -203,7 +207,6 @@
       </div>
     }
 
-    <!-- Indicador de carga -->
     @if (loading()) {
       <div class="loading-indicator">
         <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -222,7 +225,6 @@
       </div>
     }
 
-    <!-- Estado vacío -->
     @if (groupedOrders().length === 0 && !loading()) {
       <div class="empty-state">
         <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,7 +273,7 @@
     </div>
   }
 
-  <!-- Detail Modal for Cancelled Orders -->
+  <!-- Detail Modal for Cancelado Orders -->
   @if (selectedOrder() && isOrderCancelled(selectedOrder()!)) {
     <app-cancelled-order-detail-modal
       [order]="selectedOrder()"
@@ -280,7 +282,7 @@
     />
   }
 
-  <!-- Detail Modal for Pending/Ready Orders -->
+  <!-- Detail Modal for Pendiente/Listo Orders -->
   @if (selectedOrder() && !isOrderCancelled(selectedOrder()!)) {
     <app-pending-ready-order-detail-modal
       [order]="selectedOrder()"

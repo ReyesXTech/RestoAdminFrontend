@@ -12,9 +12,7 @@ export class ExchangeService {
   private _exchangeRate = signal<ExchangeRateResponse | null>(null);
   readonly exchangeRate = this._exchangeRate.asReadonly();
 
-  constructor() {
-    this.loadExchangeRate();
-  }
+  constructor() {}
 
   loadExchangeRate(): void {
     firstValueFrom(this.http.get<ExchangeRateResponse>(`${this.apiUrl}/exchangerates/current`))

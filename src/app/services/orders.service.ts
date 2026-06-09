@@ -7,6 +7,7 @@ import {
   OrderDetailResponse,
   CancelOrderCommand,
   CreateOrderCommand,
+  UpdateOrderCommand,
 } from '../models/order.models';
 import { OrderStatus } from '../models';
 import { PagedResult } from '../models/common.models';
@@ -101,7 +102,6 @@ export class OrdersService {
       }));
 
       stateUpdater((prev) => {
-        // ⚠️ ¡Aquí estaba el error! Usar normalizedItems en lugar de result.items
         const newItems = page === 1 ? normalizedItems : [...prev.items, ...normalizedItems];
         return {
           ...prev,
@@ -141,7 +141,7 @@ export class OrdersService {
 
   // ==================== PENDIENTES ====================
   loadPendingOrders(): void {
-    this.pendingFilters = { status: OrderStatus.Pending, onlyTodayPendingReady: true };
+    this.pendingFilters = { status: OrderStatus.Pendiente, onlyTodayPendingReady: true };
     this.resetAndLoadFirstPage(
       this._pendingState,
       (updater) => this._pendingState.update(updater),
@@ -159,7 +159,7 @@ export class OrdersService {
 
   // ==================== LISTOS ====================
   loadReadyOrders(): void {
-    this.readyFilters = { status: OrderStatus.Ready, onlyTodayPendingReady: true };
+    this.readyFilters = { status: OrderStatus.Listo, onlyTodayPendingReady: true };
     this.resetAndLoadFirstPage(
       this._readyState,
       (updater) => this._readyState.update(updater),
@@ -180,7 +180,7 @@ export class OrdersService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     this.cancelledFilters = {
-      status: OrderStatus.Cancelled,
+      status: OrderStatus.Cancelado,
       fromDate: thirtyDaysAgo.toISOString(),
     };
     this.resetAndLoadFirstPage(
@@ -254,5 +254,9 @@ export class OrdersService {
     return firstValueFrom(
       this.http.patch<void>(`${this.apiUrl}/orders/${command.orderId}/cancel`, command),
     );
+  }
+
+  updateOrder(command: UpdateOrderCommand): Promise<void> {
+    return firstValueFrom(this.http.put<void>(`${this.apiUrl}/orders/${command.orderId}`, command));
   }
 }

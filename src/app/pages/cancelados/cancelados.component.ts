@@ -5,6 +5,7 @@ import { ClipboardService } from '../../services/clipboard.service';
 import { ToastService } from '../../services/toast.service';
 import { OrderListItemDto, OrderDetailResponse } from '../../models';
 import { CancelledOrderDetailModalComponent } from '../../shared/components/order-modals/cancelled-order-detail-modal.component';
+import { TooltipService } from '../../services/tooltip.service';
 
 @Component({
   selector: 'app-cancelados',
@@ -16,17 +17,14 @@ import { CancelledOrderDetailModalComponent } from '../../shared/components/orde
 export class CanceladosComponent implements OnInit, OnDestroy {
   private dataService = inject(DataService);
   private clipboardService = inject(ClipboardService);
+  private tooltipService = inject(TooltipService);
   public toastService = inject(ToastService);
 
-  // Señales del servicio
   readonly cancelledOrders = this.dataService.cancelledOrders;
   readonly loading = this.dataService.cancelledLoading;
   readonly hasMore = this.dataService.cancelledHasMore;
 
-  // Modal
   selectedOrder = signal<OrderDetailResponse | null>(null);
-
-  // Toasts
   toasts = signal<ReturnType<typeof this.toastService.getToasts>>([]);
   private effectRef?: ReturnType<typeof effect>;
 
@@ -45,12 +43,10 @@ export class CanceladosComponent implements OnInit, OnDestroy {
     this.effectRef?.destroy();
   }
 
-  // 🆕 Scroll infinito
   onContentScroll(event: Event): void {
     const element = event.target as HTMLElement;
     const threshold = 100;
     const nearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
-
     if (nearBottom && this.hasMore() && !this.loading()) {
       this.dataService.loadNextCancelledPage();
     }
@@ -71,5 +67,31 @@ export class CanceladosComponent implements OnInit, OnDestroy {
 
   copyPhone(phone: string): void {
     this.clipboardService.copyPhone(phone);
+  }
+
+  // NUEVOS MÉTODOS
+  async restoreOrder(orderId: string): Promise<void> {
+    try {
+      await this.dataService.revertToPending(orderId);
+      this.toastService.show('Pedido restaurado a pendiente', 'success');
+      // Recargar las listas afectadas (pendientes, listos, y los propios cancelados)
+      this.dataService.loadPendingOrders();
+      this.dataService.loadReadyOrders();
+      this.dataService.loadCancelledOrders();
+    } catch {
+      this.toastService.show('Error al restaurar pedido', 'error');
+    }
+  }
+
+  showTooltip(event: MouseEvent, text: string): void {
+    const button = event.currentTarget as HTMLElement;
+    const rect = button.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top - 8;
+    this.tooltipService.show(text, x, y);
+  }
+
+  hideTooltip(): void {
+    this.tooltipService.hide();
   }
 }

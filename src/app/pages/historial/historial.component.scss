@@ -210,7 +210,7 @@
     justify-content: center;
     gap: 0.75rem;
     padding: 1rem 2rem;
-    margin: 0 auto;
+    margin: 1.5rem auto 0;
     width: fit-content;
     color: var(--text-secondary);
     font-size: 0.875rem;
@@ -317,7 +317,7 @@
         cursor: pointer;
         @include transition(all, 150ms);
 
-        // Pending orders
+        // Pendiente orders
         &.pending {
           .client-name,
           .total {
@@ -339,7 +339,7 @@
           }
         }
 
-        // Ready orders
+        // Listo orders
         &.ready {
           .client-name,
           .total {
@@ -361,7 +361,7 @@
           }
         }
 
-        // Cancelled orders
+        // Cancelado orders
         &.cancelled {
           .client-name,
           .total {
@@ -447,6 +447,7 @@
             font-weight: 600;
             padding: 0.25rem 0.9rem;
             border-radius: 2rem;
+            white-space: nowrap;
             cursor: pointer;
             @include transition(all, 150ms);
 
@@ -748,7 +749,7 @@
           border-left: 4px solid transparent;
           transition: border-left-color 150ms ease;
 
-          // Pending orders in dark mode - darker background
+          // Pendiente orders in dark mode - darker background
           &.pending {
             background-color: color(gray-950);
 
@@ -789,7 +790,7 @@
             }
           }
 
-          // Ready orders in dark mode - darker background
+          // Listo orders in dark mode - darker background
           &.ready {
             background-color: color(gray-950);
 
@@ -830,7 +831,7 @@
             }
           }
 
-          // Cancelled orders in dark mode - darker background
+          // Cancelado orders in dark mode - darker background
           &.cancelled {
             background-color: color(gray-950);
 

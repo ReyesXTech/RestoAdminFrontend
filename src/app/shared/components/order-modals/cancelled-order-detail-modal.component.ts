@@ -48,7 +48,7 @@ export class CancelledOrderDetailModalComponent {
     const x = rect.left + rect.width / 2;
     const y = rect.top - 8;
     this.addressTooltipPosition.set({ x, y });
-    this.currentAddress.set(this.order()?.deliveryAddress || '');
+    this.currentAddress.set(this.order()?.formattedDeliveryAddress || '');
     this.addressTooltipVisible.set(true);
   }
 

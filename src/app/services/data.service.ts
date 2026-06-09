@@ -90,8 +90,8 @@ export class DataService {
     this.loadReadyOrders();
   }
 
-  async cancelOrder(orderId: string): Promise<void> {
-    await this.ordersService.cancelOrder({ orderId });
+  async cancelOrder(orderId: string, reason?: string): Promise<void> {
+    await this.ordersService.cancelOrder({ orderId, reason: reason || null });
     this.loadPendingOrders();
     this.loadReadyOrders();
     this.loadCancelledOrders();
@@ -135,6 +135,7 @@ export class DataService {
 
   // ==================== USERS ====================
   readonly users = this.usersService.users;
+
   loadUsers(): void {
     this.usersService.loadAllUsers();
   }

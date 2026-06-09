@@ -17,6 +17,7 @@ export interface UserResponse {
   fullName: string;
   phone?: string | null;
   role: UserRole; // antes string → ahora enum
+  photoUrl?: string | null;
   createdAtUtc: string;
   lastLoginUtc?: string | null;
   isActive: boolean;

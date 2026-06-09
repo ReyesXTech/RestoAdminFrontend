@@ -134,7 +134,7 @@
   @if (selectedOrder()) {
     <app-pending-ready-order-detail-modal
       [order]="selectedOrder()"
-      [isUrgent]="selectedOrder()!.desiredDeliveryTimeUtc | isUrgent: currentTime()"
+      [isUrgent]="selectedOrder()!.desiredDeliveryTimeAtLocal | isUrgent: currentTime()"
       (close)="closeDetail()"
     />
   }
@@ -157,6 +157,22 @@
         <p class="cancel-modal-submessage">
           Esta acción no se puede deshacer. El pedido se moverá a la sección de cancelados.
         </p>
+
+        <!-- 👇 Nuevo campo opcional para motivo -->
+        <div class="cancel-reason-field">
+          <label for="cancelReason" class="cancel-reason-label"
+            >Motivo de cancelación (opcional)</label
+          >
+          <textarea
+            id="cancelReason"
+            class="cancel-reason-input"
+            [value]="cancelReason()"
+            (input)="cancelReason.set($any($event.target).value)"
+            placeholder="Ej: Cliente solicitó cancelación, producto no disponible, etc."
+            rows="3"
+          ></textarea>
+        </div>
+
         <div class="cancel-modal-actions">
           <button class="cancel-modal-btn cancel-modal-btn-secondary" (click)="closeCancelModal()">
             Volver

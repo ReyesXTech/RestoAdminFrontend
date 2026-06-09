@@ -1,0 +1,31 @@
+# Dependencias y compilados (se regeneran)
+node_modules
+dist
+
+# Control de versiones
+.git
+.gitignore
+
+# Carpetas de herramientas que no se necesitan en la imagen
+.vscode
+.continue
+.zencoder
+.zenflow
+.angular
+
+# Documentación y notas
+MIGRATION_GUIDE.md
+PROJECT_OVERVIEW.md
+RefactoringPlan.md
+README.md
+
+# Archivos de configuración de editor
+.editorconfig
+
+# Logs de desarrollo
+server.log
+
+# Otros archivos irrelevantes
+npm-debug.log
+
+.idea
